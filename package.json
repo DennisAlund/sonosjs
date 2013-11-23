@@ -1,0 +1,44 @@
+{
+	"name": "SonosJS",
+	"description": "A Javascript controller lib for Sonos. See project page for requirements and support.",
+	"version": "0.0.1",
+	"homepage": "http://github.com/oddbit/sonosjs",
+	"author": "Dennis Alund",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/oddbit/sonosjs.git"
+	},
+    "licenses": [
+        {
+            "type": "Apache version 2.0",
+            "url": "http://github.com/oddbit/sonosjs/blob/master/LICENSE"
+        }
+    ],
+	"scripts": {
+		"build": "grunt build",
+		"test": "grunt test"
+	},
+	"devDependencies": {
+		"requirejs": "latest",
+		"grunt": "~0.4",
+		"grunt-requirejs": "latest",
+		"grunt-contrib-requirejs": "latest",
+		"grunt-contrib-jshint": "~0.7",
+		"grunt-contrib-qunit": "latest",
+		"grunt-text-replace": "latest",
+		"grunt-cli": "~0.1"
+	},
+	"bugs": {
+		"url": "https://github.com/oddbit/sonosjs/issues"
+	},
+	"directories": {
+		"test": "test",
+		"lib": "src"
+	},
+	"keywords": [
+		"sonos",
+		"chrome",
+		"chrome app",
+		"chrome extension"
+	]
+}

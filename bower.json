@@ -1,0 +1,24 @@
+{
+    "name": "sonos",
+    "version": "0.0.1",
+    "main": "dist/sonos.js",
+    "ignore": [
+        "/src",
+        "/lib",
+        "/test",
+        ".git*",
+        ".bowerrc",
+        ".jshintrc",
+        "Gruntfile.js",
+        "bower.json",
+        "package.json"
+    ],
+    "dependencies": {
+        "sugar": "latest"
+    },
+    "devDependencies": {
+        "qunit": "latest",
+        "almond": "latest",
+        "requirejs": "latest"
+    }
+}
