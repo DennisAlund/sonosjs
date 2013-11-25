@@ -45,7 +45,7 @@ module.exports = function (grunt) {
             outFile: "./dist/sonos.js"
         },
         jshint: {
-            src: ["Gruntfile.js", "src/**/*.js", "test/**/*.js"],
+            src: ["Gruntfile.js", ".jshintrc", "package.json", "bower.json", "src/**/*.js", "test/**/*.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
