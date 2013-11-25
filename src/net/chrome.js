@@ -32,32 +32,56 @@ define(function (require) {
             }
         }
 
-        function udpSocket() {
+        function udpSocket(opts) {
+            opts = opts || {};
             var that = {};
 
             var socketId = 0;
-            var consumerCallback;
+            var consumer = opts.consumer;
+            var remoteIp = opts.remoteIp;
+            var remotePort = opts.remotePort;
+            var localPort = opts.localPort || 0;
+            var autoCloseTimeout = (opts.timeout || 0) * 1000;
 
-            function waitReceive() {
-                if (that.isClosed()) {
+            var onReceive = function (result) {
+                if (!that.isClosed()) {
+                    chrome.socket.recvFrom(socketId, onReceive);
+                }
+
+                if (result.resultCode < 0) {
+                    log.error("Failed to read from socket {1}. Error code: {2}".assign(socketId, result.resultCode));
+                    that.close();
                     return;
                 }
-                chrome.socket.recvFrom(socketId, function (result) {
-                    if (result.resultCode < 0) {
-                        log.error("Failed to read from socket {1}. Error code: {2}".assign(socketId, result.resultCode));
-                        that.close();
-                        return;
-                    }
-                    waitReceive();
-                    var data = baseNet.fromBuffer(result.data);
-                    if (consumerCallback) {
-                        consumerCallback(data);
-                    }
-                });
-            }
+
+                if (consumer) {
+                    consumer(baseNet.fromBuffer(result.data));
+                }
+            };
+
 
             that.isClosed = function () {
                 return socketId === 0;
+            };
+
+            that.open = function (callback) {
+                chrome.socket.create("udp", function (info) {
+                    socketId = info.socketId;
+                    chrome.socket.bind(socketId, "0.0.0.0", localPort, function (result) {
+                        if (result !== 0) {
+                            log.error("Failed to bind socket {1} for {2}:{3}".assign(socketId, remoteIp, remotePort));
+                            that.close();
+                            return;
+                        }
+
+                        chrome.socket.recvFrom(socketId, onReceive);
+                        if (autoCloseTimeout > 0) {
+                            that.close.delay(autoCloseTimeout);
+                        }
+
+                        callback();
+                    });
+                });
             };
 
             that.close = function () {
@@ -68,56 +92,29 @@ define(function (require) {
                 }
             };
 
-            that.joinMulticast = function (ip, port, callback) {
-                consumerCallback = callback;
-                chrome.socket.create("udp", {}, function (info) {
-                    socketId = info.socketId;
-                    chrome.socket.bind(socketId, "0.0.0.0", 0, function () {
-                        log.debug("Joining multicast group {ip}:{port} on socket '{socket}'.".assign({
-                            ip: ip,
-                            port: port,
-                            socket: socketId
-                        }));
-
-                        waitReceive();
-
-                        chrome.socket.setMulticastTimeToLive(socketId, 2, function () {
-                            chrome.socket.setMulticastLoopbackMode(socketId, false, function () {
-                                chrome.socket.joinGroup(socketId, ip, function (result) {
-                                    if (result !== 0) {
-                                        log.error("Could not join group. Error code: " + result);
-                                        that.close();
-                                        return;
-                                    }
-                                });
-                            });
+            that.joinMulticast = function () {
+                chrome.socket.setMulticastTimeToLive(socketId, 2, function () {
+                    chrome.socket.setMulticastLoopbackMode(socketId, false, function () {
+                        chrome.socket.joinGroup(socketId, remoteIp, function (result) {
+                            if (result !== 0) {
+                                log.error("Could not join group. Error code: " + result);
+                                that.close();
+                                return;
+                            }
+                            log.debug("Joining multicast group {1} on socket '{2}'".assign(remoteIp, socketId));
                         });
                     });
                 });
             };
 
-            that.send = function (message, dstIp, dstPort, callback, options) {
-                options = options || {};
-                consumerCallback = callback;
+            that.send = function (message) {
+                chrome.socket.sendTo(socketId, baseNet.toBuffer(message), remoteIp, remotePort, function (info) {
+                    if (info.bytesWritten < 0) {
+                        log.error("Failed to send on socket '{1}' for {2}:{3}".assign(socketId, remoteIp, remotePort));
+                    }
 
-                chrome.socket.create("udp", function (info) {
-                    socketId = info.socketId;
-                    chrome.socket.bind(socketId, "0.0.0.0", 0, function () {
-                        waitReceive();
-
-                        log.debug("Sending to {ip}:{port} on socket id '{socket}'.".assign({
-                            ip: dstIp,
-                            port: dstPort,
-                            socket: socketId
-                        }), message);
-
-                        chrome.socket.sendTo(socketId, baseNet.toBuffer(message), dstIp, dstPort, function () {});
-                    });
+                    log.debug("Sent {1} bytes on socket '{2}' for {3}:{4}".assign(info.bytesWritten, socketId, remoteIp, remotePort));
                 });
-
-                if (options.timeout) {
-                    setTimeout(that.close, options.timeout * 1000);
-                }
             };
 
             return that;

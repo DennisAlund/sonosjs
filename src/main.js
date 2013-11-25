@@ -69,16 +69,15 @@ define(function (require) {
          * @param {string} data     SSDP discovery response
          */
         function processDiscoveryResponse(data) {
-            triggerEvent(eventTypes.DEVICE_FOUND, data);
             var discoveryResponse = upnp.ssdp.discoveryResponse.fromData(data);
             if (!discoveryResponse) {
-                log.debug("Ignoring response that was not a SSDP discovery response: \n" + data);
+                log.debug("Ignoring response that was not a SSDP discovery response.");
                 return;
             }
 
-            log.debug("Got discovery response.");
-
-            triggerEvent(eventTypes.DEVICE_FOUND, discoveryResponse);
+            // TODO: Make it into SONOS Device
+            var sonosDevice = {};
+            triggerEvent(eventTypes.DEVICE_FOUND, sonosDevice);
         }
 
         /**
@@ -91,7 +90,7 @@ define(function (require) {
             var notification = upnp.ssdp.notification.fromData(data);
 
             if (!notification) {
-                log.debug("Ignoring response that was not a SSDP notification: \n" + data);
+                log.debug("Ignoring response that was not a SSDP notification");
                 return;
             }
 
@@ -127,14 +126,18 @@ define(function (require) {
 
             // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
             // Add a couple of seconds before closing the socket seems to be a good idea
-            var socketOpts = {
-                timeout: discoveryMessage.maxWaitTime + 2
-            };
-
-            // Send each discovery request a number of times in hope that all devices are reached
-            (3).times(function () {
-                net.udpSocket().send(discoveryMessage.toData(), "239.255.255.250", 1900, processDiscoveryResponse, socketOpts);
-            }.lazy(250));
+            var socket = net.udpSocket({
+                remoteIp: "239.255.255.250",
+                remotePort: 1900,
+                timeout: discoveryMessage.maxWaitTime + 3,
+                consumer: processDiscoveryResponse
+            });
+            socket.open(function () {
+                // Send each discovery request a number of times in hope that all devices are reached
+                (3).times(function () {
+                    socket.send(discoveryMessage.toData());
+                }.lazy(250));
+            });
         }
 
         /**
@@ -157,13 +160,27 @@ define(function (require) {
          * Join the SSDP multicast group and start receiving notifications.
          */
         that.start = function () {
+            if (!net.isSupported) {
+                log.error("No networking support. Can not run Sonos controller.");
+                return;
+            }
+
             log.info("Starting the Sonos UPnP controller");
             isServiceRunning = true;
             if (multicastGroupSocket) {
                 return;
             }
-            multicastGroupSocket = net.udpSocket();
-            multicastGroupSocket.joinMulticast("239.255.255.250", 1900, processNotification);
+
+            multicastGroupSocket = net.udpSocket({
+                remoteIp: "239.255.255.250",
+                localPort: 1900,
+                consumer: processNotification
+            });
+
+            multicastGroupSocket.open(function () {
+                multicastGroupSocket.joinMulticast();
+            });
+
             discover();
         };
 
