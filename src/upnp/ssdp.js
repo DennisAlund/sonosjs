@@ -242,7 +242,7 @@ define(function (require) {
 
             that.isValid = function () {
                 return Object.keys(that).all(function (key) {
-                    if (key === "searchPort") {
+                    if (key === "searchPort" || key === "date") {
                         return true;
                     }
                     return that[key] ? true : false;
@@ -306,7 +306,7 @@ define(function (require) {
              * @param {string} anotherNotificationSubType    A valid notification sub type
              * @returns {boolean}
              */
-            that.isNotificationSubType = function (anotherNotificationSubType) {
+            that.isAdvertisement = function (anotherNotificationSubType) {
                 return isValidAdvertisement(anotherNotificationSubType) &&
                     that.advertisement === anotherNotificationSubType;
             };

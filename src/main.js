@@ -96,15 +96,15 @@ define(function (require) {
 
             log.debug("Got a notification message.");
 
-            if (notification.isNotificationSubType(upnp.ssdp.advertisementType.goodbye)) {
+            if (notification.isAdvertisement(upnp.ssdp.advertisementType.goodbye)) {
                 log.debug("Device '{1}' is leaving".assign(notification.getId()));
                 triggerEvent(eventTypes.DEVICE_LEAVE, notification);
             }
-            else if (notification.isNotificationSubType(upnp.ssdp.advertisementType.alive)) {
+            else if (notification.isAdvertisement(upnp.ssdp.advertisementType.alive)) {
                 log.debug("Device '{1}' says alive".assign(notification.getId()));
                 triggerEvent(eventTypes.DEVICE_FOUND, notification);
             }
-            else if (notification.isNotificationSubType(upnp.ssdp.advertisementType.update)) {
+            else if (notification.isAdvertisement(upnp.ssdp.advertisementType.update)) {
                 log.debug("Device '{1}' should be updated".assign(notification.getId()));
                 triggerEvent(eventTypes.DEVICE_UPDATE, notification);
             }
