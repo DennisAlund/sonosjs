@@ -20,9 +20,13 @@
 define(function (require) {
         "use strict";
 
+        var shared = require("ssdp/shared");
+
         return {
-            ssdp: require("upnp/ssdp"),
-            control: require("upnp/control")
+            advertisementType: shared.advertisementType,
+            discoveryRequest: require("ssdp/discoveryRequest"),
+            discoveryResponse: require("ssdp/discoveryResponse"),
+            notification: require("ssdp/notification")
         };
     }
 );

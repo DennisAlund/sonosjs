@@ -17,7 +17,7 @@ module.exports = function (grunt) {
                     log: "./utils/log",
                     sugar: "../lib/sugar/release/sugar.min"
                 },
-                packages: ["net", "upnp"],
+                packages: ["net", "ssdp"],
                 logLevel: 0,
                 include: ["<%=meta.libMain%>"],
                 insertRequire: ["<%=meta.libMain%>"],

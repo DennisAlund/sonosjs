@@ -2,7 +2,7 @@ define(function (require) {
         "use strict";
 
         var env = require("utils/environment");
-        var upnp = require("upnp");
+        var ssdp = require("ssdp");
 
         // -------------------------------------------------------------------------------------------------------------
         // SSDP DISCOVERY
@@ -12,7 +12,7 @@ define(function (require) {
 
         QUnit.test("Should be able to set all attributes from header options", function () {
             // Arrange & Act
-            var ssdpRequest = upnp.ssdp.discoveryRequest({
+            var ssdpRequest = ssdp.discoveryRequest({
                 maxWaitTime: 99,
                 targetScope: "urn:schemas-upnp-org:device:Test:12345"
             });
@@ -26,7 +26,7 @@ define(function (require) {
 
         QUnit.test("Serialized request should look ok", function () {
             // Arrange & Act
-            var ssdpRequest = upnp.ssdp.discoveryRequest({
+            var ssdpRequest = ssdp.discoveryRequest({
                 maxWaitTime: 99,
                 targetScope: "urn:schemas-upnp-org:device:Test:12345"
             });
@@ -50,7 +50,7 @@ define(function (require) {
 
         QUnit.test("Should set all relevant attributes from header options for UPDATE notification", function () {
             // Arrange & Act
-            var ssdpNotification = upnp.ssdp.notification({
+            var ssdpNotification = ssdp.notification({
                 uniqueServiceName: "abc123",
                 location: "127.0.0.1",
                 bootId: 69,
@@ -70,12 +70,12 @@ define(function (require) {
             QUnit.strictEqual(ssdpNotification.householdToken, "homeSweetHome", "Config id is correct.");
             QUnit.strictEqual(ssdpNotification.searchPort, 1978, "Search port is correct.");
             QUnit.strictEqual(ssdpNotification.targetScope, "urn:schemas-upnp-org:device:Test:12345", "Target scope type is correct.");
-            QUnit.strictEqual(ssdpNotification.advertisement, upnp.ssdp.advertisementType.update, "Advertisement is correct.");
+            QUnit.strictEqual(ssdpNotification.advertisement, ssdp.advertisementType.update, "Advertisement is correct.");
         });
 
         QUnit.test("Should be able to set all attributes from header options for ALIVE notification", function () {
             // Arrange & Act
-            var ssdpNotification = upnp.ssdp.notification({
+            var ssdpNotification = ssdp.notification({
                 uniqueServiceName: "abc123",
                 location: "127.0.0.1",
                 bootId: 69,
@@ -95,7 +95,7 @@ define(function (require) {
             QUnit.strictEqual(ssdpNotification.householdToken, "homeSweetHome", "Config id is correct.");
             QUnit.strictEqual(ssdpNotification.searchPort, 1978, "Search port is correct.");
             QUnit.strictEqual(ssdpNotification.targetScope, "urn:schemas-upnp-org:device:Test:12345", "Target scope type is correct.");
-            QUnit.strictEqual(ssdpNotification.advertisement, upnp.ssdp.advertisementType.alive, "Advertisement is correct.");
+            QUnit.strictEqual(ssdpNotification.advertisement, ssdp.advertisementType.alive, "Advertisement is correct.");
             QUnit.strictEqual(ssdpNotification.keepAlive, 1234, "Keep-alive is correct.");
             QUnit.strictEqual(ssdpNotification.server, "My Server", "Server is correct.");
         });

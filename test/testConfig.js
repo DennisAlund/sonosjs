@@ -9,7 +9,7 @@ define(function () {
             sugar: "../lib/sugar/release/sugar.min"
         },
         packages: [
-            "upnp",
+            "ssdp",
             {name: "unitTests", location: "../test/unit"},
             {name: "integrationTests", location: "../test/integration"},
             {name: "mocks", location: "../test/mocks"},
