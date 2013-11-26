@@ -71,9 +71,9 @@ define(function (require) {
                 return;
             }
 
-            var words = line.words();
-            var key = words.first().toLocaleUpperCase().to(-1); // First word, minus the ':'
-            var value = words.from(1).join(" ");
+            var keyEnd = line.indexOf(":");
+            var key = line.to(keyEnd).toUpperCase();
+            var value = line.from(keyEnd + 1).trim();
 
             switch (key) {
             case "HOST":
