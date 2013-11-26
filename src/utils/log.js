@@ -26,9 +26,9 @@ define(function (require) {
             return (level & env.LOG_LEVEL) === level;
         }
 
-        function log(message, tag) {
-            var msg = [env.APP_NAME, tag, (new Date()).toISOString(), message].join("\t");
-            console.log(msg);
+        function formatLog(message, tag) {
+            message = message || "";
+            return [env.APP_NAME, tag, (new Date()).toISOString(), message].join("\t");
         }
 
         /**
@@ -39,15 +39,10 @@ define(function (require) {
         function debugLog() {
             var that = {};
 
-            that.debug = function (message, obj) {
-                if (!isLevel(env.LOG_LEVELS.DEBUG)) {
-                    return;
-                }
+            that.debug = function (message) {
 
-                log(message, "DEBUG");
-                if (obj) {
-                    console.log(obj);
-                }
+                arguments[0] = formatLog(message, "DEBUG");
+                console.debug.apply(console, arguments);
             };
 
             that.trace = function (message) {
@@ -55,7 +50,8 @@ define(function (require) {
                     return;
                 }
 
-                log(message, "TRACE");
+                arguments[0] = formatLog(message, "TRACE");
+                console.debug.apply(console, arguments);
             };
 
             that.info = function (message) {
@@ -63,7 +59,8 @@ define(function (require) {
                     return;
                 }
 
-                log(message, "INFO");
+                arguments[0] = formatLog(message, "INFO");
+                console.info.apply(console, arguments);
             };
 
             that.warning = function (message) {
@@ -71,7 +68,8 @@ define(function (require) {
                     return;
                 }
 
-                log(message, "WARNING");
+                arguments[0] = formatLog(message, "WARNING");
+                console.warn.apply(console, arguments);
             };
 
             that.error = function (message) {
@@ -79,8 +77,8 @@ define(function (require) {
                     return;
                 }
 
-                log(message, "ERROR");
-                throw message;
+                arguments[0] = formatLog(message, "ERROR");
+                console.error.apply(console, arguments);
             };
 
             return that;
@@ -94,11 +92,6 @@ define(function (require) {
         function releaseLog() {
             var that = {};
 
-            function log(message, tag) {
-                var msg = ["[", tag, "]", (new Date()).toISOString(), message].join("\t");
-                console.log(msg);
-            }
-
             that.debug = function () {};
             that.trace = function () {};
             that.info = function () {};
@@ -107,7 +100,9 @@ define(function (require) {
                 if (!isLevel(env.LOG_LEVELS.ERROR)) {
                     return;
                 }
-                log(message, "ERROR");
+
+                arguments[0] = formatLog(message, "ERROR");
+                console.error.apply(console, arguments);
             };
 
             return that;

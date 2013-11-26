@@ -49,16 +49,17 @@ define(function (require) {
                 }
 
                 if (result.resultCode < 0) {
-                    log.error("Failed to read from socket {1}. Error code: {2}".assign(socketId, result.resultCode));
+                    log.error("Failed to read from socket %d. Error code: %d", socketId, result.resultCode);
                     that.close();
                     return;
                 }
+
+                log.debug("Received %d bytes from %s on port %d", result.data.byteLength, result.address, result.port);
 
                 if (consumer) {
                     consumer(baseNet.fromBuffer(result.data));
                 }
             };
-
 
             that.isClosed = function () {
                 return socketId === 0;
@@ -69,7 +70,7 @@ define(function (require) {
                     socketId = info.socketId;
                     chrome.socket.bind(socketId, "0.0.0.0", localPort, function (result) {
                         if (result !== 0) {
-                            log.error("Failed to bind socket {1} for {2}:{3}".assign(socketId, remoteIp, remotePort));
+                            log.error("Failed to bind socket %d for %s:%d", socketId, remoteIp, remotePort);
                             that.close();
                             return;
                         }
@@ -86,7 +87,7 @@ define(function (require) {
 
             that.close = function () {
                 if (!that.isClosed()) {
-                    log.debug("Closing socket '{1}'".assign(socketId));
+                    log.debug("Closing socket '%d'", socketId);
                     chrome.socket.destroy(socketId);
                     socketId = 0;
                 }
@@ -97,11 +98,11 @@ define(function (require) {
                     chrome.socket.setMulticastLoopbackMode(socketId, false, function () {
                         chrome.socket.joinGroup(socketId, remoteIp, function (result) {
                             if (result !== 0) {
-                                log.error("Could not join group. Error code: " + result);
+                                log.error("Could not join group. Error code: %d", result);
                                 that.close();
                                 return;
                             }
-                            log.debug("Joining multicast group {1} on socket '{2}'".assign(remoteIp, socketId));
+                            log.debug("Joining multicast group %s on socket '%d'", remoteIp, socketId);
                         });
                     });
                 });
@@ -110,10 +111,9 @@ define(function (require) {
             that.send = function (message) {
                 chrome.socket.sendTo(socketId, baseNet.toBuffer(message), remoteIp, remotePort, function (info) {
                     if (info.bytesWritten < 0) {
-                        log.error("Failed to send on socket '{1}' for {2}:{3}".assign(socketId, remoteIp, remotePort));
+                        log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
                     }
-
-                    log.debug("Sent {1} bytes on socket '{2}' for {3}:{4}".assign(info.bytesWritten, socketId, remoteIp, remotePort));
+                    log.debug("Sent %d bytes on socket '%d' for %s:%d", info.bytesWritten, socketId, remoteIp, remotePort);
                 });
             };
 
