@@ -22,14 +22,42 @@ define(function (require) {
 
     var log = require("log");
     var chrome = require("net/chrome");
+    var udpSocket;
 
     if (chrome.isSupported) {
         log.info("Networking module found support for chrome sockets.");
-        return chrome;
+        udpSocket = chrome.udpSocket;
+    }
+    else {
+        log.warning("Networking module didn't find any suitable networking support.");
+        return {
+            isSupported: false
+        };
     }
 
-    log.warning("Networking module didn't find any suitable networking support.");
+    function httpRequest(options) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", options.url, true);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (options.callback) {
+                    options.callback(xhr.responseXML);
+                }
+            }
+
+            else if (xhr.status !== 200) {
+                log.error("Got HTTP%d from %s", xhr.status, options.url);
+            }
+        };
+
+        log.debug("Making XHR request: %s", options.url);
+        xhr.send();
+    }
+
     return {
-        isSupported: false
+        isSupported: true,
+        udpSocket: udpSocket,
+        httpRequest: httpRequest
     };
 });
