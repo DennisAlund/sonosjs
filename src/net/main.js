@@ -38,11 +38,11 @@ define(function (require) {
     function httpRequest(options) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", options.url, true);
-
+        xhr.responseType = "text";
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 if (options.callback) {
-                    options.callback(xhr.responseXML);
+                    options.callback(xhr.responseText);
                 }
             }
 
