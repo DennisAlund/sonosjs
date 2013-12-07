@@ -200,7 +200,7 @@ define(function (require) {
 
                 log.info("Starting the Sonos UPnP controller");
                 isServiceRunning = true;
-                if (multicastGroupSocket) {
+                if (multicastGroupSocket && !multicastGroupSocket.isClosed()) {
                     return;
                 }
 
