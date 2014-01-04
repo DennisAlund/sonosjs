@@ -26,7 +26,24 @@ define(function (require) {
             opts = opts || {};
             var that = opts;
 
-            // TODO: Implement this properly
+            var lastUpdated = Date.now();
+            var deviceInfoUrl;
+
+            that.getUniqueServiceName = function () {
+                return [that.id, that.device.type].join("::");
+            };
+
+            that.getLastUpdated = function () {
+                return lastUpdated;
+            };
+
+            that.getDeviceInfoUrl = function () {
+                return deviceInfoUrl;
+            };
+
+            that.setDeviceInfoUrl = function (newDeviceInfoUrl) {
+                deviceInfoUrl = newDeviceInfoUrl;
+            };
 
             return that;
         }
@@ -36,6 +53,7 @@ define(function (require) {
             var opts = {
                 id: xmlDocument.getValue("UDN"),
                 displayName: xmlDocument.getValue("displayName"),
+                speakerSize: xmlDocument.getValue("internalSpeakerSize"),
                 device: {
                     type: xmlDocument.getValue("deviceType"),
                     softwareVersion: xmlDocument.getValue("softwareVersion"),

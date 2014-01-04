@@ -23,10 +23,12 @@ define(function (require) {
     var log = require("log");
     var chrome = require("net/chrome");
     var udpSocket;
+    var httpRequest;
 
     if (chrome.isSupported) {
         log.info("Networking module found support for chrome sockets.");
         udpSocket = chrome.udpSocket;
+        httpRequest = chrome.httpRequest;
     }
     else {
         log.warning("Networking module didn't find any suitable networking support.");
@@ -35,25 +37,6 @@ define(function (require) {
         };
     }
 
-    function httpRequest(options) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", options.url, true);
-        xhr.responseType = "text";
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                if (options.callback) {
-                    options.callback(xhr.responseText);
-                }
-            }
-
-            else if (xhr.status !== 200) {
-                log.error("Got HTTP%d from %s", xhr.status, options.url);
-            }
-        };
-
-        log.debug("Making XHR request: %s", options.url);
-        xhr.send();
-    }
 
     return {
         isSupported: true,

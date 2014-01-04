@@ -43,24 +43,6 @@ define(function (require) {
             var localPort = opts.localPort || 0;
             var autoCloseTimeout = (opts.timeout || 0) * 1000;
 
-            var onReceive = function (result) {
-                if (!that.isClosed()) {
-                    chrome.socket.recvFrom(socketId, onReceive);
-                }
-
-                if (result.resultCode < 0) {
-                    log.error("Failed to read from socket %d. Error code: %d", socketId, result.resultCode);
-                    that.close();
-                    return;
-                }
-
-                log.debug("Received %d bytes from %s on port %d", result.data.byteLength, result.address, result.port);
-
-                if (consumer) {
-                    consumer(baseNet.fromBuffer(result.data));
-                }
-            };
-
             that.isClosed = function () {
                 return socketId === 0;
             };
@@ -68,6 +50,7 @@ define(function (require) {
             that.open = function (callback) {
                 chrome.socket.create("udp", function (info) {
                     socketId = info.socketId;
+                    log.debug("Creating socket '%d'", socketId);
                     chrome.socket.bind(socketId, "0.0.0.0", localPort, function (result) {
                         if (result !== 0) {
                             log.error("Failed to bind socket %d for %s:%d", socketId, remoteIp, remotePort);
@@ -75,7 +58,7 @@ define(function (require) {
                             return;
                         }
 
-                        chrome.socket.recvFrom(socketId, onReceive);
+                        chrome.socket.recvFrom(socketId, receiveData);
                         if (autoCloseTimeout > 0) {
                             that.close.delay(autoCloseTimeout);
                         }
@@ -113,16 +96,52 @@ define(function (require) {
                     if (info.bytesWritten < 0) {
                         log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
                     }
-                    log.debug("Sent %d bytes on socket '%d' for %s:%d", info.bytesWritten, socketId, remoteIp, remotePort);
+                    console.debug("Sent: %s", message);
                 });
             };
+
+            function receiveData(result) {
+                chrome.socket.recvFrom(socketId, receiveData);
+                if (result.resultCode < 0) {
+                    log.error("Failed to read from socket %d. Error code: %d", socketId, result.resultCode);
+                    return;
+                }
+
+                if (consumer) {
+                    consumer(baseNet.fromBuffer(result.data));
+                }
+            }
 
             return that;
         }
 
+
+        function httpRequest(options) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", options.url, true);
+            xhr.responseType = "text";
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    if (options.callback) {
+                        console.log(xhr.responseText);
+                        options.callback(xhr.responseText);
+                    }
+                }
+
+                else if (xhr.status !== 200) {
+                    log.error("Got HTTP%d from %s", xhr.status, options.url);
+                }
+            };
+
+            log.debug("Making XHR request: %s", options.url);
+            xhr.send();
+        }
+
+
         return {
             isSupported: isSupported,
-            udpSocket: udpSocket
+            udpSocket: udpSocket,
+            httpRequest: httpRequest
         };
     }
 );

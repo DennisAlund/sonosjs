@@ -34,6 +34,8 @@ define(function (require) {
             DEVICE_LEAVE: "%%E:DEVICE_LEAVE%%"
         };
 
+        // Refresh the device list after maximum five minutes
+        var deviceMaxLifetime = 1000 * 60 * 5;
 
         /**
          * The public API for Sonos service.
@@ -52,126 +54,6 @@ define(function (require) {
             Object.values(eventTypes, function (value) {
                 eventCallbacks[value] = [];
             });
-
-            function triggerEvent(event, data) {
-                if (!isServiceRunning) {
-                    return;
-                }
-
-                eventCallbacks[event].forEach(function (callback) {
-                    setTimeout(function () {
-                        callback(data);
-                    }, 0);
-                });
-            }
-
-            /**
-             * Contact known device from SSDP for detailed information
-             *
-             * @param {object} ssdp SSDP notification/response for at device
-             */
-            function updateDeviceDetails(ssdp) {
-                if (!devices[ssdp.uniqueServiceName]) {
-                    // Just a reservation to avoid several requests for the same device
-                    devices[ssdp.uniqueServiceName] = true;
-                    log.debug("Adding new device '%s' to the cache.", ssdp.uniqueServiceName);
-                    net.httpRequest({
-                        url: ssdp.location,
-                        callback: function (xml) {
-                            devices[ssdp.uniqueServiceName] = models.device.fromXml(xml);
-                            var currentDevices = [];
-                            for (var id in devices) {
-                                if (devices.hasOwnProperty(id) && devices[id] !== true) {
-                                    currentDevices.push(devices[id]);
-                                }
-                            }
-                            triggerEvent(eventTypes.DEVICES, currentDevices);
-                        }
-                    });
-                }
-                else {
-                    // TODO: Update time to live
-                    console.log("Should check if it's time for update");
-                }
-            }
-
-            /**
-             * This function is called for each response that is received after explicitly making a SSDP search request.
-             *
-             * @param {string} data     SSDP discovery response
-             */
-            function processDiscoveryResponse(data) {
-                var discoveryResponse = ssdp.discoveryResponse.fromData(data);
-                if (!discoveryResponse) {
-                    return;
-                }
-                updateDeviceDetails(discoveryResponse);
-            }
-
-            /**
-             * This function is called for each SSDP notification that is received in the SSDP multicast group. This can
-             * happen at any time without any explicit action from the service.
-             *
-             * @param {string} data     SSDP notification
-             */
-            function processNotification(data) {
-                var notification = ssdp.notification.fromData(data);
-
-                if (!notification) {
-                    return;
-                }
-
-                log.debug("Got a notification message.");
-
-                if (notification.isAdvertisement(ssdp.advertisementType.goodbye)) {
-                    log.debug("Device '%s' is leaving", notification.uniqueServiceName);
-                    delete(devices[notification.uniqueServiceName]);
-                    triggerEvent(eventTypes.DEVICES, devices);
-                }
-                else if (notification.isAdvertisement(ssdp.advertisementType.alive)) {
-                    log.debug("Device '%s' says alive", notification.uniqueServiceName);
-                    updateDeviceDetails(notification);
-                }
-                else if (notification.isAdvertisement(ssdp.advertisementType.update)) {
-                    log.debug("Device '%s' should be updated", notification.uniqueServiceName);
-                    // TODO: Implement this... if Sonos devices ever use it?
-                    triggerEvent(eventTypes.DEVICE_UPDATE, notification);
-                }
-            }
-
-            /**
-             * Discover Sonos devices on the network
-             *
-             *
-             * TODO: Send it periodically according to CACHE-CONTROL max age spec
-             */
-            var discover = function () {
-                log.info("Sending discovery on Sonos UPnP controller");
-
-                var discoveryMessage = ssdp.discoveryRequest({
-                    targetScope: "urn:schemas-upnp-org:device:ZonePlayer:1",
-                    maxWaitTime: 5
-                });
-
-                // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
-                // Add a couple of seconds before closing the socket seems to be a good idea
-                var socket = net.udpSocket({
-                    remoteIp: "239.255.255.250",
-                    remotePort: 1900,
-                    timeout: discoveryMessage.maxWaitTime + 3,
-                    consumer: processDiscoveryResponse
-                });
-
-                socket.open(function () {
-                    // Send each discovery request a number of times in hope that all devices are reached
-                    var data = discoveryMessage.toData();
-                    [1, 2, 3].forEach(function (time) {
-                        setTimeout(function () {
-                            socket.send(data);
-                        }, time * 250);
-                    });
-                });
-            };
 
             /**
              * Register an event callback. These should be methods that can take care and further process the multicast
@@ -207,7 +89,7 @@ define(function (require) {
                 multicastGroupSocket = net.udpSocket({
                     remoteIp: "239.255.255.250",
                     localPort: 1900,
-                    consumer: processNotification
+                    consumer: onMulticastNotification
                 });
 
 
@@ -215,7 +97,7 @@ define(function (require) {
                     multicastGroupSocket.joinMulticast();
                 });
 
-                discover();
+                setTimeout(discover, 1000);
             };
 
             /**
@@ -231,6 +113,143 @@ define(function (require) {
                 multicastGroupSocket.close();
             };
 
+            function triggerSubscriptionEvent(event, data) {
+                if (!isServiceRunning) {
+                    return;
+                }
+
+                eventCallbacks[event].forEach(function (callback) {
+                    setTimeout(function () {
+                        callback(data);
+                    }, 0);
+                });
+            }
+
+            /**
+             * Clean up and refresh the device list cache
+             *
+             * If a device has not sent any updated info lately (within the specified max cache time);
+             * the device will be deleted from the cache and a new request for info will be sent. Naturally
+             * it will disappear from the list of devices in case that device does not answer anymore.
+             */
+            function manageDeviceDecay() {
+                var referenceTime = Date.now() - deviceMaxLifetime;
+
+                for (var deviceId in devices) {
+                    if (devices.hasOwnProperty(deviceId)) {
+                        if (devices[deviceId].getLastUpdated() <= referenceTime) {
+                            var usn = devices[deviceId].getUniqueServiceName();
+                            var url = devices[deviceId].getDeviceInfoUrl();
+                            delete(devices[deviceId]);
+                            requestDeviceDetails(usn, url);
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Contact known device from SSDP for detailed information
+             *
+             * @param uniqueServiceName
+             * @param location
+             */
+            function requestDeviceDetails(uniqueServiceName, location) {
+                log.debug("Making device details request for: %s", uniqueServiceName);
+                net.httpRequest({
+                    url: location,
+                    callback: function (xml) {
+                        var isNew = !devices.hasOwnProperty(uniqueServiceName);
+                        var device = models.device.fromXml(xml);
+                        device.setDeviceInfoUrl(location);
+                        devices[uniqueServiceName] = device;
+                        if (isNew) {
+                            log.debug("Adding new device information to cache: %s", uniqueServiceName);
+                            triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                        }
+                    }
+                });
+                setTimeout(manageDeviceDecay, deviceMaxLifetime);
+            }
+
+            /**
+             * This function is called for each response that is received after explicitly making a SSDP search request.
+             *
+             * @param {string} data     SSDP discovery response
+             */
+            function onDiscoveryResponse(data) {
+                var discoveryResponse = ssdp.discoveryResponse.fromData(data);
+                if (!discoveryResponse) {
+                    return;
+                }
+
+                // Discovery requests are usually sent in bursts. Multiple responses are expected.
+                if (!devices.hasOwnProperty(discoveryResponse.uniqueServiceName)) {
+                    requestDeviceDetails(discoveryResponse.uniqueServiceName, discoveryResponse.location);
+                }
+            }
+
+            /**
+             * This function is called for each SSDP notification that is received in the SSDP multicast group. This can
+             * happen at any time without any explicit action from the service.
+             *
+             * @param {string} data     SSDP notification
+             */
+            function onMulticastNotification(data) {
+                var notification = ssdp.notification.fromData(data);
+
+                if (!notification) {
+                    return;
+                }
+
+                log.debug("Got a notification message: %s", notification.advertisement);
+
+                switch (notification.advertisement) {
+                case ssdp.advertisementType.goodbye:
+                    delete(devices[notification.uniqueServiceName]);
+                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                    break;
+                case ssdp.advertisementType.alive:
+                case ssdp.advertisementType.update:
+                    requestDeviceDetails(notification.uniqueServiceName, notification.location);
+                    break;
+                default:
+                    log.error("Unknown advertisement type '%s'", notification.advertisement);
+                }
+            }
+
+            /**
+             * Discover Sonos devices on the network
+             *
+             *
+             * TODO: Send it periodically according to CACHE-CONTROL max age spec
+             */
+            function discover() {
+                log.info("Sending discovery on Sonos UPnP controller");
+
+                var discoveryMessage = ssdp.discoveryRequest({
+                    targetScope: "urn:schemas-upnp-org:device:ZonePlayer:1",
+                    maxWaitTime: 5
+                });
+
+                // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
+                // Add a couple of seconds before closing the socket seems to be a good idea
+                var socket = net.udpSocket({
+                    remoteIp: "239.255.255.250",
+                    remotePort: 1900,
+                    timeout: discoveryMessage.maxWaitTime + 3,
+                    consumer: onDiscoveryResponse
+                });
+
+                socket.open(function () {
+                    // Send each discovery request a number of times in hope that all devices are reached
+                    var data = discoveryMessage.toData();
+                    [1, 2, 3].forEach(function (time) {
+                        setTimeout(function () {
+                            socket.send(data);
+                        }, time * 250);
+                    });
+                });
+            }
 
             return that;
         }
