@@ -52,6 +52,10 @@ define(function (require) {
 
             that.searchPort = opts.searchPort;
 
+            that.getId = function () {
+                var endOfUsn = that.uniqueServiceName.indexOf("::");
+                return endOfUsn < 0 ? "" : that.uniqueServiceName.substr(0, endOfUsn);
+            };
 
             /**
              * Check if this is an alive, update or byebye notification

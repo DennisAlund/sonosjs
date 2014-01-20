@@ -97,7 +97,10 @@ define(function (require) {
                     multicastGroupSocket.joinMulticast();
                 });
 
-                setTimeout(discover, 1000);
+                // Go wild with discovery at startup!
+                discover();
+                setTimeout(discover, 3000);
+                setTimeout(discover, 10000);
             };
 
             /**
@@ -125,6 +128,29 @@ define(function (require) {
                 });
             }
 
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // PRIVATE METHODS
+
+            function removeDevice(deviceId) {
+                if (devices.hasOwnProperty(deviceId)) {
+                    delete(devices[deviceId]);
+                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                }
+            }
+
+            function addDevice(device) {
+                var isNew = !devices.hasOwnProperty(device.id);
+                devices[device.id] = device;
+                if (isNew) {
+                    console.debug("Added new device: %s", device.id);
+                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                }
+                else {
+                    console.debug("Updating device: %s", device.id);
+                }
+            }
+
             /**
              * Clean up and refresh the device list cache
              *
@@ -140,7 +166,7 @@ define(function (require) {
                         if (devices[deviceId].getLastUpdated() <= referenceTime) {
                             var usn = devices[deviceId].getUniqueServiceName();
                             var url = devices[deviceId].getDeviceInfoUrl();
-                            delete(devices[deviceId]);
+                            removeDevice(deviceId);
                             requestDeviceDetails(usn, url);
                         }
                     }
@@ -158,14 +184,9 @@ define(function (require) {
                 net.httpRequest({
                     url: location,
                     callback: function (xml) {
-                        var isNew = !devices.hasOwnProperty(uniqueServiceName);
                         var device = models.device.fromXml(xml);
                         device.setDeviceInfoUrl(location);
-                        devices[uniqueServiceName] = device;
-                        if (isNew) {
-                            log.debug("Adding new device information to cache: %s", uniqueServiceName);
-                            triggerSubscriptionEvent(eventTypes.DEVICES, devices);
-                        }
+                        addDevice(device);
                     }
                 });
                 setTimeout(manageDeviceDecay, deviceMaxLifetime);
@@ -203,14 +224,15 @@ define(function (require) {
 
                 log.debug("Got a notification message: %s", notification.advertisement);
 
+                var deviceId = notification.getId();
+
                 switch (notification.advertisement) {
                 case ssdp.advertisementType.goodbye:
-                    delete(devices[notification.uniqueServiceName]);
-                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                    removeDevice(deviceId);
                     break;
                 case ssdp.advertisementType.alive:
                 case ssdp.advertisementType.update:
-                    requestDeviceDetails(notification.uniqueServiceName, notification.location);
+                    requestDeviceDetails(deviceId, notification.location);
                     break;
                 default:
                     log.error("Unknown advertisement type '%s'", notification.advertisement);
@@ -236,17 +258,17 @@ define(function (require) {
                 var socket = net.udpSocket({
                     remoteIp: "239.255.255.250",
                     remotePort: 1900,
-                    timeout: discoveryMessage.maxWaitTime + 3,
+                    timeout: discoveryMessage.maxWaitTime + 5,
                     consumer: onDiscoveryResponse
                 });
 
                 socket.open(function () {
                     // Send each discovery request a number of times in hope that all devices are reached
                     var data = discoveryMessage.toData();
-                    [1, 2, 3].forEach(function (time) {
+                    [0, 1, 2, 3].forEach(function (time) {
                         setTimeout(function () {
                             socket.send(data);
-                        }, time * 250);
+                        }, time * 500);
                     });
                 });
             }
