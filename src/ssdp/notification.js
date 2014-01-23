@@ -20,6 +20,7 @@
 define(function (require) {
         "use strict";
 
+        var baseSsdp = require("ssdp/base");
         var shared = require("ssdp/shared");
         var env = require("utils/environment");
 
@@ -32,14 +33,9 @@ define(function (require) {
         function notification(opts) {
             opts = opts || {};
 
-            var that = {};
+            var that = baseSsdp(opts);
 
-            that.location = opts.location || "";
-            that.targetScope = opts.targetScope || "";
             that.advertisement = opts.advertisement || "";
-            that.uniqueServiceName = opts.uniqueServiceName || "";
-            that.bootId = opts.bootId || 1;
-            that.householdToken = opts.householdToken;
 
             // Optional values depending on notification type
             if (that.advertisement === shared.advertisementType.alive) {
@@ -51,11 +47,6 @@ define(function (require) {
             }
 
             that.searchPort = opts.searchPort;
-
-            that.getId = function () {
-                var endOfUsn = that.uniqueServiceName.indexOf("::");
-                return endOfUsn < 0 ? "" : that.uniqueServiceName.substr(0, endOfUsn);
-            };
 
             /**
              * Check if this is an alive, update or byebye notification

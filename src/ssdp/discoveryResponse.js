@@ -20,6 +20,7 @@
 define(function (require) {
         "use strict";
 
+        var baseSsdp = require("ssdp/base");
         var shared = require("ssdp/shared");
 
         /**
@@ -33,17 +34,12 @@ define(function (require) {
         function discoveryResponse(opts) {
             opts = opts || {};
 
-            var that = {};
+            var that = baseSsdp(opts);
 
             that.keepAlive = opts.keepAlive || 1800; // The maximum amount of time to assume that a device is online
             that.date = opts.date;
-            that.location = opts.location || "";
-            that.targetScope = opts.targetScope || "";
             that.userAgent = opts.userAgent || ""; // The same as user agent for a request
-            that.uniqueServiceName = opts.uniqueServiceName || "";
-            that.bootId = opts.bootId || 0;
             that.searchPort = opts.searchPort;
-            that.householdToken = opts.householdToken;
 
 
             that.isValid = function () {
