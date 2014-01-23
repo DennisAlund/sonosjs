@@ -27,6 +27,7 @@ define(function (require) {
             var that = opts;
 
             var lastUpdated = Date.now();
+            var deviceLocation;
             var deviceInfoUrl;
 
             that.getUniqueServiceName = function () {
@@ -43,7 +44,16 @@ define(function (require) {
 
             that.setDeviceInfoUrl = function (newDeviceInfoUrl) {
                 deviceInfoUrl = newDeviceInfoUrl;
+                deviceLocation = deviceInfoUrl.substr(0, deviceInfoUrl.indexOf("/", 7));
             };
+
+            that.getMediaStateUrl = function () {
+                return formatServiceUrl("/MediaRenderer/AVTransport/Control");
+            };
+
+            function formatServiceUrl(serviceUri) {
+                return deviceLocation + serviceUri;
+            }
 
             return that;
         }
