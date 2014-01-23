@@ -48,12 +48,8 @@ define(function (require) {
 
             var isServiceRunning = false;
             var multicastGroupSocket;
-            var devices = {};
-
             var eventCallbacks = {};
-            Object.values(eventTypes, function (value) {
-                eventCallbacks[value] = [];
-            });
+            var devices = {};
 
             /**
              * Register an event callback. These should be methods that can take care and further process the multicast
@@ -64,9 +60,12 @@ define(function (require) {
              * @param {string} event        Type of event, which is defined by the UPnP module
              * @param {function} callback   Callback method to be called when the event occurs
              */
-            that.onEvent = function (event, callback) {
-                if (Object.values(eventTypes).any(event)) {
-                    eventCallbacks[event].add(callback);
+            that.on = function (event, callback) {
+                if (eventCallbacks.hasOwnProperty(event)) {
+                    eventCallbacks[event].push(callback);
+                }
+                else {
+                    log.warning("Event type '%s' is not supported.", event);
                 }
             };
 
@@ -75,8 +74,8 @@ define(function (require) {
              * Join the SSDP multicast group and start receiving notifications.
              */
             that.start = function () {
-                if (!net.isSupported) {
-                    log.error("No networking support. Can not run Sonos controller.");
+                if (!net.haveSocketSupport) {
+                    log.error("No socket support. Can not run Sonos controller.");
                     return;
                 }
 
@@ -97,6 +96,9 @@ define(function (require) {
                     multicastGroupSocket.joinMulticast();
                 });
 
+                // Just send out whatever we got to start with
+                triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
+
                 // Go wild with discovery at startup!
                 discover();
                 setTimeout(discover, 3000);
@@ -116,26 +118,59 @@ define(function (require) {
                 multicastGroupSocket.close();
             };
 
-            function triggerSubscriptionEvent(event, data) {
-                if (!isServiceRunning) {
-                    return;
+            /**
+             * Get the current device data
+             *
+             * @returns {object} Device data
+             */
+            that.getDevices = function () {
+                return getDevices();
+            };
+
+            /**
+             * Request a specific device's details by its id or a known URL to description service.
+             *
+             * This method will trigger corresponding information event when the device responds to the request
+             *
+             * @param {string} info     A device id or an URL to the device's service
+             */
+            that.requestDeviceDetails = function (info) {
+                var location = null;
+                if (typeof(info) === "string") {
+                    if (devices.hasOwnProperty(info)) {
+                        location = devices[info].getDeviceInfoUrl();
+
+                    }
+                    else {
+                        location = info;
+                    }
                 }
 
-                eventCallbacks[event].forEach(function (callback) {
-                    setTimeout(function () {
-                        callback(data);
-                    }, 0);
-                });
-            }
+                if (location !== null) {
+                    requestDeviceDetails(location);
+                }
+            };
+
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
             // PRIVATE METHODS
 
+            function getDevices() {
+                var deviceList = [];
+                for (var deviceId in devices) {
+                    if (devices.hasOwnProperty(deviceId)) {
+                        deviceList.push(devices[deviceId]);
+                    }
+                }
+                return deviceList;
+            }
+
+
             function removeDevice(deviceId) {
                 if (devices.hasOwnProperty(deviceId)) {
                     delete(devices[deviceId]);
-                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                    triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
                 }
             }
 
@@ -143,11 +178,11 @@ define(function (require) {
                 var isNew = !devices.hasOwnProperty(device.id);
                 devices[device.id] = device;
                 if (isNew) {
-                    console.debug("Added new device: %s", device.id);
-                    triggerSubscriptionEvent(eventTypes.DEVICES, devices);
+                    log.debug("Added new device: %s", device.id);
+                    triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
                 }
                 else {
-                    console.debug("Updating device: %s", device.id);
+                    log.debug("Updating device: %s", device.id);
                 }
             }
 
@@ -164,10 +199,9 @@ define(function (require) {
                 for (var deviceId in devices) {
                     if (devices.hasOwnProperty(deviceId)) {
                         if (devices[deviceId].getLastUpdated() <= referenceTime) {
-                            var usn = devices[deviceId].getUniqueServiceName();
                             var url = devices[deviceId].getDeviceInfoUrl();
                             removeDevice(deviceId);
-                            requestDeviceDetails(usn, url);
+                            requestDeviceDetails(url);
                         }
                     }
                 }
@@ -176,11 +210,10 @@ define(function (require) {
             /**
              * Contact known device from SSDP for detailed information
              *
-             * @param uniqueServiceName
-             * @param location
+             *  @param location
              */
-            function requestDeviceDetails(uniqueServiceName, location) {
-                log.debug("Making device details request for: %s", uniqueServiceName);
+            function requestDeviceDetails(location) {
+                log.debug("Making device details request for: %s", location);
                 net.httpRequest({
                     url: location,
                     callback: function (xml) {
@@ -204,8 +237,8 @@ define(function (require) {
                 }
 
                 // Discovery requests are usually sent in bursts. Multiple responses are expected.
-                if (!devices.hasOwnProperty(discoveryResponse.uniqueServiceName)) {
-                    requestDeviceDetails(discoveryResponse.uniqueServiceName, discoveryResponse.location);
+                if (!devices.hasOwnProperty(discoveryResponse.getId())) {
+                    requestDeviceDetails(discoveryResponse.location);
                 }
             }
 
@@ -232,7 +265,7 @@ define(function (require) {
                     break;
                 case ssdp.advertisementType.alive:
                 case ssdp.advertisementType.update:
-                    requestDeviceDetails(deviceId, notification.location);
+                    requestDeviceDetails(notification.location);
                     break;
                 default:
                     log.error("Unknown advertisement type '%s'", notification.advertisement);
@@ -241,7 +274,6 @@ define(function (require) {
 
             /**
              * Discover Sonos devices on the network
-             *
              *
              * TODO: Send it periodically according to CACHE-CONTROL max age spec
              */
@@ -258,7 +290,7 @@ define(function (require) {
                 var socket = net.udpSocket({
                     remoteIp: "239.255.255.250",
                     remotePort: 1900,
-                    timeout: discoveryMessage.maxWaitTime + 5,
+                    timeout: 30,
                     consumer: onDiscoveryResponse
                 });
 
@@ -267,11 +299,45 @@ define(function (require) {
                     var data = discoveryMessage.toData();
                     [0, 1, 2, 3].forEach(function (time) {
                         setTimeout(function () {
+                            log.debug("Sending discovery request %d", time);
                             socket.send(data);
                         }, time * 500);
                     });
                 });
             }
+
+
+            //
+            function triggerSubscriptionEvent(event, data) {
+                if (!isServiceRunning) {
+                    return;
+                }
+
+                eventCallbacks[event].forEach(function (callback) {
+                    setTimeout(function () {
+                        callback(data);
+                    }, 0);
+                });
+            }
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // INITIALIZE THE SERVICE
+
+            /**
+             * Initialize the service.
+             * All bootstrapping etc goes here.
+             */
+            (function init() {
+
+                // Setup empty callback lists for all events
+                for (var eventType in eventTypes) {
+                    if (eventTypes.hasOwnProperty(eventType)) {
+                        var eventName = eventTypes[eventType];
+                        eventCallbacks[eventName] = [];
+                    }
+                }
+            }());
 
             return that;
         }
