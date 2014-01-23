@@ -23,16 +23,10 @@ define(function (require) {
         require("sugar");
         var log = require("log");
         var env = require("utils/environment");
+        var event = require("utils/event");
         var net = require("net");
         var ssdp = require("ssdp");
         var models = require("models");
-
-        var eventTypes = {
-            DEVICES: "%%E:DEVICES%%",
-            DEVICE_FOUND: "%%E:DEVICE_FOUND%%",
-            DEVICE_UPDATE: "%%E:DEVICE_UPDATE%%",
-            DEVICE_LEAVE: "%%E:DEVICE_LEAVE%%"
-        };
 
         // Refresh the device list after maximum five minutes
         var deviceMaxLifetime = 1000 * 60 * 5;
@@ -48,26 +42,7 @@ define(function (require) {
 
             var isServiceRunning = false;
             var multicastGroupSocket;
-            var eventCallbacks = {};
             var devices = {};
-
-            /**
-             * Register an event callback. These should be methods that can take care and further process the multicast
-             * information that is retrieved from UPnP.
-             *
-             * A callback method should have the profile `function(data) { ... do something with data ... }`
-             *
-             * @param {string} event        Type of event, which is defined by the UPnP module
-             * @param {function} callback   Callback method to be called when the event occurs
-             */
-            that.on = function (event, callback) {
-                if (eventCallbacks.hasOwnProperty(event)) {
-                    eventCallbacks[event].push(callback);
-                }
-                else {
-                    log.warning("Event type '%s' is not supported.", event);
-                }
-            };
 
             /**
              * Start up the UPnP controller
@@ -97,7 +72,7 @@ define(function (require) {
                 });
 
                 // Just send out whatever we got to start with
-                triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
+                event.trigger(event.action.DEVICES, getDevices());
 
                 // Go wild with discovery at startup!
                 discover();
@@ -170,7 +145,7 @@ define(function (require) {
             function removeDevice(deviceId) {
                 if (devices.hasOwnProperty(deviceId)) {
                     delete(devices[deviceId]);
-                    triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
+                    event.trigger(event.action.DEVICES, getDevices());
                 }
             }
 
@@ -179,7 +154,7 @@ define(function (require) {
                 devices[device.id] = device;
                 if (isNew) {
                     log.debug("Added new device: %s", device.id);
-                    triggerSubscriptionEvent(eventTypes.DEVICES, getDevices());
+                    event.trigger(event.action.DEVICES, getDevices());
                 }
                 else {
                     log.debug("Updating device: %s", device.id);
@@ -306,45 +281,12 @@ define(function (require) {
                 });
             }
 
-
-            //
-            function triggerSubscriptionEvent(event, data) {
-                if (!isServiceRunning) {
-                    return;
-                }
-
-                eventCallbacks[event].forEach(function (callback) {
-                    setTimeout(function () {
-                        callback(data);
-                    }, 0);
-                });
-            }
-
-            // ----------------------------------------------------------------
-            // ----------------------------------------------------------------
-            // INITIALIZE THE SERVICE
-
-            /**
-             * Initialize the service.
-             * All bootstrapping etc goes here.
-             */
-            (function init() {
-
-                // Setup empty callback lists for all events
-                for (var eventType in eventTypes) {
-                    if (eventTypes.hasOwnProperty(eventType)) {
-                        var eventName = eventTypes[eventType];
-                        eventCallbacks[eventName] = [];
-                    }
-                }
-            }());
-
             return that;
         }
 
         return {
             VERSION: env.VERSION,
-            events: eventTypes,
+            event: event,
             models: models,
             service: sonosService()
         };
