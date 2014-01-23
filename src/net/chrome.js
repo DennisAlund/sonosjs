@@ -96,7 +96,6 @@ define(function (require) {
                     if (info.bytesWritten < 0) {
                         log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
                     }
-                    console.debug("Sent: %s", message);
                 });
             };
 
@@ -116,32 +115,9 @@ define(function (require) {
         }
 
 
-        function httpRequest(options) {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", options.url, true);
-            xhr.responseType = "text";
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    if (options.callback) {
-                        console.log(xhr.responseText);
-                        options.callback(xhr.responseText);
-                    }
-                }
-
-                else if (xhr.status !== 200) {
-                    log.error("Got HTTP%d from %s", xhr.status, options.url);
-                }
-            };
-
-            log.debug("Making XHR request: %s", options.url);
-            xhr.send();
-        }
-
-
         return {
             isSupported: isSupported,
-            udpSocket: udpSocket,
-            httpRequest: httpRequest
+            udpSocket: udpSocket
         };
     }
 );

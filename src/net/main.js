@@ -21,26 +21,66 @@ define(function (require) {
     "use strict";
 
     var log = require("log");
+    var base = require("net/base");
     var chrome = require("net/chrome");
-    var udpSocket;
-    var httpRequest;
+    var udpSocket = null;
 
     if (chrome.isSupported) {
         log.info("Networking module found support for chrome sockets.");
         udpSocket = chrome.udpSocket;
-        httpRequest = chrome.httpRequest;
     }
     else {
         log.warning("Networking module didn't find any suitable networking support.");
-        return {
-            isSupported: false
-        };
     }
 
+    function soapRequest(soap) {
+        var options = {};
+
+        options.body = base.toBuffer(soap.getPayload());
+    }
+
+    function httpRequest(options) {
+        var action = options.action || "GET";
+        var requestHeaders = options.requestHeaders || [];
+        var responseType = options.responseType || "text";
+        var xhrResponseProperty = responseType === "text" ? "responseText" : "response";
+        var body = options.body || null;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open(action, options.url, true);
+
+        requestHeaders.forEach(function (requestHeader) {
+            xhr.setRequestHeader(requestHeader.header, requestHeader.value);
+        });
+
+        xhr.responseType = responseType;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (options.callback) {
+                    log.debug("Got response on request: %s", options.url);
+                    options.callback(xhr[xhrResponseProperty]);
+                }
+            }
+
+            else if (xhr.status !== 200) {
+                log.error("Got HTTP%d from %s", xhr.status, options.url);
+            }
+        };
+
+        log.debug("Making XHR request: %s", options.url);
+
+        if (body === null) {
+            xhr.send();
+        }
+        else {
+            xhr.send(body);
+        }
+    }
 
     return {
-        isSupported: true,
+        haveSocketSupport: udpSocket !== null,
         udpSocket: udpSocket,
+        soapRequest: soapRequest,
         httpRequest: httpRequest
     };
 });
