@@ -116,7 +116,7 @@ define(function (require) {
                 // Supported but ignored
                 break;
             default:
-                log.debug("Unknown SSDP header '{1}' was ignored.".assign(key));
+                // Do nothing for now... other UPnP devices are throwing in a lot of headers that are not considered here
                 break;
             }
         }
