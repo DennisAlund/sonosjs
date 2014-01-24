@@ -189,14 +189,13 @@ define(function (require) {
              */
             function requestDeviceDetails(location) {
                 log.debug("Making device details request for: %s", location);
-                net.httpRequest({
-                    url: location,
-                    callback: function (xml) {
+                net.httpRequest({url: location},
+                    function xhrCallback(xml) {
                         var device = models.device.fromXml(xml);
                         device.setDeviceInfoUrl(location);
                         addDevice(device);
                     }
-                });
+                );
                 setTimeout(manageDeviceDecay, deviceMaxLifetime);
             }
 

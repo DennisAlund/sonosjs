@@ -39,7 +39,7 @@ define(function (require) {
         options.body = base.toBuffer(soap.getPayload());
     }
 
-    function httpRequest(options) {
+    function httpRequest(options, callback) {
         var action = options.action || "GET";
         var requestHeaders = options.requestHeaders || [];
         var responseType = options.responseType || "text";
@@ -56,9 +56,9 @@ define(function (require) {
         xhr.responseType = responseType;
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                if (options.callback) {
+                if (callback) {
                     log.debug("Got response on request: %s", options.url);
-                    options.callback(xhr[xhrResponseProperty]);
+                    callback(xhr[xhrResponseProperty]);
                 }
             }
 
