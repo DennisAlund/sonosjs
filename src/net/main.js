@@ -39,15 +39,35 @@ define(function (require) {
         options.body = base.toBuffer(soap.getPayload());
     }
 
-    function httpRequest(options, callback) {
-        var action = options.action || "GET";
-        var requestHeaders = options.requestHeaders || [];
-        var responseType = options.responseType || "text";
+    /**
+     * Make an asynchronous HTTP request.
+     *
+     * @param {string}      url         Destination URL
+     * @param {object}      [options]   Optional options
+     * @param {function}    [callback]  Optional success callback
+     */
+    function httpRequest(url, options, callback) {
+        var opts = {};
+        var onSuccessCallback = null;
+
+        if (typeof(options) === "object") {
+            opts = options;
+        }
+        else if (typeof(options) === "function") {
+            onSuccessCallback = options;
+        }
+        else {
+            onSuccessCallback = callback;
+        }
+
+        var action = opts.action || "GET";
+        var requestHeaders = opts.requestHeaders || [];
+        var responseType = opts.responseType || "text";
         var xhrResponseProperty = responseType === "text" ? "responseText" : "response";
-        var body = options.body || null;
+        var body = opts.body || null;
 
         var xhr = new XMLHttpRequest();
-        xhr.open(action, options.url, true);
+        xhr.open(action, url, true);
 
         requestHeaders.forEach(function (requestHeader) {
             xhr.setRequestHeader(requestHeader.header, requestHeader.value);
@@ -56,18 +76,18 @@ define(function (require) {
         xhr.responseType = responseType;
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                if (callback) {
-                    log.debug("Got response on request: %s", options.url);
-                    callback(xhr[xhrResponseProperty]);
+                if (onSuccessCallback) {
+                    log.debug("Got response on request: %s", url);
+                    onSuccessCallback(xhr[xhrResponseProperty]);
                 }
             }
 
             else if (xhr.status !== 200) {
-                log.error("Got HTTP%d from %s", xhr.status, options.url);
+                log.error("Got status code 'HTTP %d' from %s", xhr.status, url);
             }
         };
 
-        log.debug("Making XHR request: %s", options.url);
+        log.debug("Making XHR request: %s", url);
 
         if (body === null) {
             xhr.send();
