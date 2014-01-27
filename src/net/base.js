@@ -20,13 +20,17 @@
 define(function () {
         "use strict";
 
-        // Convert a string to Uint8Array buffer
-        function toBuffer(str) {
+        function toUint8Array(str) {
             str = str || "";
             var codeArray = str.codes().map(function (c) {
                 return c & 0xff;
             });
-            return new Uint8Array(codeArray).buffer;
+            return new Uint8Array(codeArray);
+        }
+
+        // Convert a string to Uint8Array buffer
+        function toBuffer(str) {
+            return toUint8Array(str).buffer;
         }
 
         // Convert an ArrayBuffer to string
@@ -41,6 +45,7 @@ define(function () {
 
         return {
             toBuffer: toBuffer,
+            toUint8Array: toUint8Array,
             fromBuffer: fromBuffer
         };
     }
