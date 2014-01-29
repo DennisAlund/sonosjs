@@ -26,6 +26,7 @@ define(function (require) {
         var event = require("utils/event");
         var net = require("net");
         var ssdp = require("ssdp");
+        var soap = require("soap");
         var models = require("models");
 
         // Refresh the device list after maximum five minutes
@@ -113,7 +114,7 @@ define(function (require) {
                 var location = null;
                 if (typeof(info) === "string") {
                     if (devices.hasOwnProperty(info)) {
-                        location = devices[info].getDeviceInfoUrl();
+                        location = devices[info].getInfoUrl();
 
                     }
                     else {
@@ -126,6 +127,39 @@ define(function (require) {
                 }
             };
 
+            /**
+             * Make a http request to a sonos device and ask for the current media state (i.e. what song
+             * is currently playing).
+             *
+             * This method will trigger corresponding information event when the device responds to the request
+             *
+             * @param {string} deviceId     Id of the device to inquire
+             */
+            that.requestMediaState = function (deviceId) {
+                var device = null;
+                if (typeof(deviceId) === "string" && devices.hasOwnProperty(deviceId)) {
+                    device = devices[deviceId];
+                }
+                log.debug("Requesting media state for device: %s", deviceId);
+
+                if (device === null) {
+                    log.warning("No device in cache with id: %s", deviceId);
+                }
+
+                net.soapRequest(
+                    device.getMediaStateUrl(),
+                    soap.mediaInfo(),
+                    function soapMediaInfoCallback(xml) {
+                        var mediaInfo = models.mediaInfo.fromXml(xml);
+                        if (mediaInfo) {
+                            event.trigger(event.action.MEDIA_INFO, mediaInfo);
+                        }
+                        else {
+                            log.error("Had problems to parse media info XML.", xml);
+                        }
+                    }
+                );
+            };
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
@@ -174,7 +208,7 @@ define(function (require) {
                 for (var deviceId in devices) {
                     if (devices.hasOwnProperty(deviceId)) {
                         if (devices[deviceId].getLastUpdated() <= referenceTime) {
-                            var url = devices[deviceId].getDeviceInfoUrl();
+                            var url = devices[deviceId].getInfoUrl();
                             removeDevice(deviceId);
                             requestDeviceDetails(url);
                         }
@@ -193,7 +227,7 @@ define(function (require) {
                     location,
                     function xhrCallback(xml) {
                         var device = models.device.fromXml(xml);
-                        device.setDeviceInfoUrl(location);
+                        device.setInfoUrl(location);
                         addDevice(device);
                     }
                 );

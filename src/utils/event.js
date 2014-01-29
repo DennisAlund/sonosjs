@@ -29,9 +29,7 @@ define(function (require) {
 
             that.action = {
                 DEVICES: "%%E:DEVICES%%",
-                DEVICE_FOUND: "%%E:DEVICE_FOUND%%",
-                DEVICE_UPDATE: "%%E:DEVICE_UPDATE%%",
-                DEVICE_LEAVE: "%%E:DEVICE_LEAVE%%"
+                MEDIA_INFO: "%%E:MEDIA_INFO%%"
             };
 
 

@@ -54,7 +54,8 @@ define(function () {
                 var elements = getElementsByTagPath(tagPath, xml);
 
                 elements.forEach(function (element) {
-                    texts.push(element.innerText);
+                    var siblingData = element.nextSibling && element.nextSibling.data;
+                    texts.push(element.innerText || siblingData);
                 });
 
                 return texts;
@@ -67,7 +68,17 @@ define(function () {
             return that;
         }
 
+        function decodeXml(encodedXml) {
+            return decodeURI(encodedXml)
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, "\"")
+                .replace(/&#039;/g, "'");
+        }
+
         return {
+            decode: decodeXml,
             document: xmlDocument
         };
     }

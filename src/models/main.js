@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,8 @@ define(function (require) {
         "use strict";
 
         return {
-            device: require("models/device")
+            device: require("models/device"),
+            mediaInfo: require("models/mediaInfo")
         };
     }
 );

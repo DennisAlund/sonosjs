@@ -27,8 +27,10 @@ define(function (require) {
             var that = opts;
 
             var lastUpdated = Date.now();
-            var deviceLocation;
-            var deviceInfoUrl;
+            var address; // Only IP and port
+            var infoUrl; // Full URL to the service
+
+            that.address = "";
 
             that.getUniqueServiceName = function () {
                 return [that.id, that.device.type].join("::");
@@ -38,21 +40,27 @@ define(function (require) {
                 return lastUpdated;
             };
 
-            that.getDeviceInfoUrl = function () {
-                return deviceInfoUrl;
+            that.getInfoUrl = function () {
+                return infoUrl;
             };
 
-            that.setDeviceInfoUrl = function (newDeviceInfoUrl) {
-                deviceInfoUrl = newDeviceInfoUrl;
-                deviceLocation = deviceInfoUrl.substr(0, deviceInfoUrl.indexOf("/", 7));
+            that.setInfoUrl = function (deviceInfoUrl) {
+                infoUrl = deviceInfoUrl || "";
+                address = extractHostFromUrl(infoUrl);
+                that.address = address;
             };
 
             that.getMediaStateUrl = function () {
                 return formatServiceUrl("/MediaRenderer/AVTransport/Control");
             };
 
+
+            function extractHostFromUrl(url) {
+                return url.replace(/http[s]?:\/\/([^\/]+).*/g, "$1");
+            }
+
             function formatServiceUrl(serviceUri) {
-                return deviceLocation + serviceUri;
+                return ["http://", address,  serviceUri].join("");
             }
 
             return that;
@@ -66,14 +74,6 @@ define(function (require) {
                 speakerSize: xmlDocument.getValue("internalSpeakerSize"),
                 device: {
                     type: xmlDocument.getValue("deviceType"),
-                    softwareVersion: xmlDocument.getValue("softwareVersion"),
-                    hardwareVersion: xmlDocument.getValue("hardwareVersion"),
-                    model: {
-                        number: xmlDocument.getValue("modelNumber"),
-                        description: xmlDocument.getValue("modelDescription"),
-                        name: xmlDocument.getValue("modelName"),
-                        url: xmlDocument.getValue("modelURL")
-                    },
                     icons: xmlDocument.getValueList("iconList.url")
                 },
                 room: {
