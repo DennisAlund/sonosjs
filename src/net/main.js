@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,38 +33,41 @@ define(function (require) {
         log.warning("Networking module didn't find any suitable networking support.");
     }
 
-    function soapRequest(soap) {
-        var options = {};
+    /**
+     * Make a asynchronous SOAP request.
+     *
+     * @param {string}          url         Destination URL
+     * @param {object}          soapMessage SOAP message
+     * @param {object|function} [options]   Optional options
+     * @param {function}        [callback]  Optional success callback
+     */
+    function soapRequest(url, soapMessage, options, callback) {
+        callback = typeof(arguments[2]) === "function" ? options : callback;
+        options = typeof(arguments[2]) === "object" ? options : {};
 
-        options.body = base.toBuffer(soap.getPayload());
+        options.action = "POST";
+        options.body = base.toUint8Array(soapMessage.getPayload());
+        options.requestHeaders = soapMessage.getHttpHeaders();
+
+        httpRequest(url, options, callback);
     }
 
     /**
      * Make an asynchronous HTTP request.
      *
-     * @param {string}      url         Destination URL
-     * @param {object}      [options]   Optional options
-     * @param {function}    [callback]  Optional success callback
+     * @param {string}          url         Destination URL
+     * @param {object|function} [options]   Optional options
+     * @param {function}        [callback]  Optional success callback
      */
     function httpRequest(url, options, callback) {
-        var opts = {};
-        var onSuccessCallback = null;
+        callback = typeof(arguments[1]) === "function" ? options : callback;
+        options = typeof(arguments[1]) === "object" ? options : {};
 
-        if (typeof(options) === "object") {
-            opts = options;
-        }
-        else if (typeof(options) === "function") {
-            onSuccessCallback = options;
-        }
-        else {
-            onSuccessCallback = callback;
-        }
-
-        var action = opts.action || "GET";
-        var requestHeaders = opts.requestHeaders || [];
-        var responseType = opts.responseType || "text";
+        var action = options.action || "GET";
+        var requestHeaders = options.requestHeaders || [];
+        var responseType = options.responseType || "text";
         var xhrResponseProperty = responseType === "text" ? "responseText" : "response";
-        var body = opts.body || null;
+        var body = options.body || null;
 
         var xhr = new XMLHttpRequest();
         xhr.open(action, url, true);
@@ -76,9 +79,9 @@ define(function (require) {
         xhr.responseType = responseType;
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                if (onSuccessCallback) {
+                if (callback) {
                     log.debug("Got response on request: %s", url);
-                    onSuccessCallback(xhr[xhrResponseProperty]);
+                    callback(xhr[xhrResponseProperty]);
                 }
             }
 
