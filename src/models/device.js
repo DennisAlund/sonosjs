@@ -76,7 +76,7 @@ define(function (require) {
                     type: xmlDocument.getValue("deviceType"),
                     icons: xmlDocument.getValueList("iconList.url")
                 },
-                room: {
+                group: {
                     name: xmlDocument.getValue("roomName")
                 }
             };
