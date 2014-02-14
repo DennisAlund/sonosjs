@@ -77,7 +77,6 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("grunt-requirejs");
-    grunt.loadNpmTasks("grunt-contrib-requirejs");
     grunt.loadNpmTasks("grunt-contrib-qunit");
     grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-text-replace");
