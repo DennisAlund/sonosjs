@@ -152,6 +152,7 @@ define(function (require) {
                     function soapMediaInfoCallback(xml) {
                         var mediaInfo = models.mediaInfo.fromXml(xml);
                         if (mediaInfo) {
+                            mediaInfo.setDevice(device);
                             event.trigger(event.action.MEDIA_INFO, mediaInfo);
                         }
                         else {

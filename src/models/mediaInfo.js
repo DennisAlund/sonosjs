@@ -29,7 +29,58 @@ define(function (require) {
             RADIO_STATION: "MEDIA_TYPE_RADIO"
         };
 
-        function metaData(opts) {
+
+        /**
+         * The media info model contains the current play state of a Sonos device with meta info that describes art work,
+         * music title, etc.
+         *
+         * @param {object}  opts    Parsed options
+         * @returns {object}        mediaInfo object
+         */
+        function mediaInfo(opts) {
+            opts = opts || {};
+            var that = {};
+
+            that.id = opts.uri;
+            that.uri = opts.uri || "";
+            that.duration = opts.duration;
+            that.currentTime = opts.currentTime;
+            that.mediaType = opts.mediaType;
+            that.metaData = opts.metaData;
+            that.playQueueNumber = opts.playQueueNumber;
+            that.device = null;
+
+            that.setDevice = function (device) {
+                that.device = device;
+            };
+
+            return that;
+        }
+
+        mediaInfo.fromXml = function (xml) {
+            var xmlDocument = xmlParser.document(xml);
+            var mediaType = deductMediaType(xmlDocument);
+            var metaData = metaDataForMediaType(mediaType, xmlDocument);
+
+            var opts = {
+                playQueueNumber: xmlDocument.getValue("Track"),
+                duration: xmlDocument.getValue("TrackDuration"),
+                uri: xmlDocument.getValue("TrackURI"),
+                currentTime: xmlDocument.getValue("RelTime"),
+                mediaType: mediaType,
+                metaData: metaData
+            };
+
+            return mediaInfo(opts);
+        };
+
+
+        // ---------------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------------------------------------
+        // PRIVATE STUFF
+
+
+        function musicFileMetaData(opts) {
             opts = opts || {};
 
             var that = opts;
@@ -37,7 +88,7 @@ define(function (require) {
             return that;
         }
 
-        metaData.fromXml = function (xml) {
+        musicFileMetaData.fromXml = function (xml) {
             var xmlDocument = xmlParser.document(xml);
 
             var opts = {
@@ -48,55 +99,62 @@ define(function (require) {
                 album: xmlDocument.getValue("upnp:album")
             };
 
-            return metaData(opts);
+            return musicFileMetaData(opts);
         };
 
-
-        function mediaInfo(opts) {
+        function radioMetaData(opts) {
             opts = opts || {};
+
             var that = opts;
-
-            that.id = opts.uri;
-            that.uri = opts.uri || "";
-            that.mediaType = mediaInfoTypes.UNKNOWN;
-
-            function deductMediaType() {
-                var trackIdentifier = that.uri.substring(0, that.uri.indexOf("://"));
-                switch (trackIdentifier.toLowerCase()) {
-                case "x-file-cifs":
-                    that.mediaType = mediaInfoTypes.MUSIC_FILE;
-                    break;
-
-                case "x-rincon-mp3radio":
-                    that.mediaType = mediaInfoTypes.RADIO_STATION;
-                    break;
-
-                default:
-                    log.warning("Unsupported media type '%s' from URI: %s", trackIdentifier, that.uri);
-                    that.mediaType = mediaInfoTypes.UNKNOWN;
-                }
-            }
-
-            (function init() {
-                deductMediaType();
-            }());
 
             return that;
         }
 
-        mediaInfo.fromXml = function (xml) {
+        radioMetaData.fromXml = function (xml) {
             var xmlDocument = xmlParser.document(xml);
-            var metaDataXml = decodeURI(xmlDocument.getValue("TrackMetaData") || "");
+
             var opts = {
-                trackNumber: xmlDocument.getValue("Track"),
-                duration: xmlDocument.getValue("TrackDuration"),
-                metaData: metaData.fromXml(metaDataXml),
-                uri: xmlDocument.getValue("TrackURI"),
-                currentTime: xmlDocument.getValue("RelTime")
+                upnpClass: xmlDocument.getValue("upnp:class"),
+                albumArtUri: xmlDocument.getValue("upnp:albumArtURI"),
+                title: xmlDocument.getValue("dc:title"),
+                artist: xmlDocument.getValue("dc:creator"),
+                album: xmlDocument.getValue("upnp:album")
             };
 
-            return mediaInfo(opts);
+            return radioMetaData(opts);
         };
+
+
+        function metaDataForMediaType(mediaType, xmlDocument) {
+            var metaDataXml = decodeURI(xmlDocument.getValue("TrackMetaData") || "");
+            switch (mediaType) {
+            case mediaInfoTypes.MUSIC_FILE:
+                return musicFileMetaData.fromXml(metaDataXml);
+
+            case mediaInfoTypes.RADIO_STATION:
+                return radioMetaData.fromXml(metaDataXml);
+            }
+
+            return null;
+        }
+
+        function deductMediaType(xmlDocument) {
+            var uri = xmlDocument.getValue("TrackURI");
+            var trackIdentifier = uri.substring(0, uri.indexOf("://"));
+            switch (trackIdentifier.toLowerCase()) {
+            case "x-file-cifs":
+                return mediaInfoTypes.MUSIC_FILE;
+
+            case "x-rincon-mp3radio":
+                return mediaInfoTypes.RADIO_STATION;
+
+            default:
+                log.warning("Unsupported media type '%s' from URI: %s", trackIdentifier, uri);
+            }
+
+            return mediaInfoTypes.UNKNOWN;
+        }
+
 
         return mediaInfo;
     }
