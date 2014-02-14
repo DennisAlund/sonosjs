@@ -61,7 +61,7 @@ define(function (require) {
                     return;
                 }
 
-                multicastGroupSocket = net.udpSocket({
+                multicastGroupSocket = net.socket.udp({
                     remoteIp: "239.255.255.250",
                     localPort: 1900,
                     consumer: onMulticastNotification
@@ -115,7 +115,6 @@ define(function (require) {
                 if (typeof(info) === "string") {
                     if (devices.hasOwnProperty(info)) {
                         location = devices[info].getInfoUrl();
-
                     }
                     else {
                         location = info;
@@ -146,7 +145,7 @@ define(function (require) {
                     log.warning("No device in cache with id: %s", deviceId);
                 }
 
-                net.soapRequest(
+                net.soap.request(
                     device.getMediaStateUrl(),
                     soap.mediaInfo(),
                     function soapMediaInfoCallback(xml) {
@@ -224,7 +223,7 @@ define(function (require) {
              */
             function requestDeviceDetails(location) {
                 log.debug("Making device details request for: %s", location);
-                net.httpRequest(
+                net.http.get(
                     location,
                     function xhrCallback(xml) {
                         var device = models.device.fromXml(xml);
@@ -297,7 +296,7 @@ define(function (require) {
 
                 // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
                 // Add a couple of seconds before closing the socket seems to be a good idea
-                var socket = net.udpSocket({
+                var socket = net.socket.udp({
                     remoteIp: "239.255.255.250",
                     remotePort: 1900,
                     timeout: 30,
@@ -326,6 +325,4 @@ define(function (require) {
             service: sonosService()
         };
     }
-
-)
-;
+);

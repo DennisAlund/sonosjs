@@ -21,8 +21,8 @@ define(function (require) {
     "use strict";
 
     var log = require("log");
-    var base = require("net/base");
     var chrome = require("net/chrome");
+    var http = require("net/http");
     var udpSocket = null;
 
     if (chrome.isSupported) {
@@ -33,77 +33,19 @@ define(function (require) {
         log.warning("Networking module didn't find any suitable networking support.");
     }
 
-    /**
-     * Make a asynchronous SOAP request.
-     *
-     * @param {string}          url         Destination URL
-     * @param {object}          soapMessage SOAP message
-     * @param {object|function} [options]   Optional options
-     * @param {function}        [callback]  Optional success callback
-     */
-    function soapRequest(url, soapMessage, options, callback) {
-        callback = typeof(arguments[2]) === "function" ? options : callback;
-        options = typeof(arguments[2]) === "object" ? options : {};
+    function net() {
+        var that = {};
 
-        options.action = "POST";
-        options.body = base.toUint8Array(soapMessage.getPayload());
-        options.requestHeaders = soapMessage.getHttpHeaders();
-
-        httpRequest(url, options, callback);
-    }
-
-    /**
-     * Make an asynchronous HTTP request.
-     *
-     * @param {string}          url         Destination URL
-     * @param {object|function} [options]   Optional options
-     * @param {function}        [callback]  Optional success callback
-     */
-    function httpRequest(url, options, callback) {
-        callback = typeof(arguments[1]) === "function" ? options : callback;
-        options = typeof(arguments[1]) === "object" ? options : {};
-
-        var action = options.action || "GET";
-        var requestHeaders = options.requestHeaders || [];
-        var responseType = options.responseType || "text";
-        var xhrResponseProperty = responseType === "text" ? "responseText" : "response";
-        var body = options.body || null;
-
-        var xhr = new XMLHttpRequest();
-        xhr.open(action, url, true);
-
-        requestHeaders.forEach(function (requestHeader) {
-            xhr.setRequestHeader(requestHeader.header, requestHeader.value);
-        });
-
-        xhr.responseType = responseType;
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                if (callback) {
-                    log.debug("Got response on request: %s", url);
-                    callback(xhr[xhrResponseProperty]);
-                }
-            }
-
-            else if (xhr.status !== 200) {
-                log.error("Got status code 'HTTP %d' from %s", xhr.status, url);
-            }
+        that.haveSocketSupport = udpSocket !== null;
+        that.socket = {
+            udp: udpSocket
         };
 
-        log.debug("Making XHR request: %s", url);
+        that.http = http.http();
+        that.soap = http.soap();
 
-        if (body === null) {
-            xhr.send();
-        }
-        else {
-            xhr.send(body);
-        }
+        return that;
     }
 
-    return {
-        haveSocketSupport: udpSocket !== null,
-        udpSocket: udpSocket,
-        soapRequest: soapRequest,
-        httpRequest: httpRequest
-    };
+    return net();
 });
