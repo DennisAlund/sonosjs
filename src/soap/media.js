@@ -108,9 +108,35 @@ define(function (require) {
             return that;
         }
 
+
+        /**
+         * This SOAP request will request a device to skip one track forward.
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function nextTrack() {
+            var my = {};
+            var that = soapBase(my);
+
+            my.getServiceUri = function () {
+                return "/MediaRenderer/AVTransport/Control";
+            };
+
+            my.getBody = function () {
+                return "<u:Next xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Next>";
+            };
+
+            (function init() {
+                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Next");
+            }());
+
+            return that;
+        }
+
         return {
             play: play,
             pause: pause,
+            nextTrack: nextTrack,
             positionInfo: positionInfo
         };
     }
