@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -147,7 +147,7 @@ define(function (require) {
 
                 net.soap.request(
                     device.getMediaStateUrl(),
-                    soap.mediaInfo(),
+                    soap.media.positionInfo(),
                     function soapMediaInfoCallback(xml) {
                         var mediaInfo = models.mediaInfo.fromXml(xml);
                         if (mediaInfo) {

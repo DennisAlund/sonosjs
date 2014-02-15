@@ -22,9 +22,28 @@ define(function (require) {
 
         var soapBase = require("./base");
 
-        function mediaInfo() {
+        var uri = "/MediaRenderer/AVTransport/Control";
+
+        /**
+         * This SOAP request will return the current media state from a device. The type of the returned information
+         * depends on the type of media that is being played. For closer inspection of the returned data see
+         * @see models.mediaInfo
+         *
+         *   - What is currently playing
+         *   - Length of current song
+         *   - Current time into the song
+         *   - Track number
+         *   - Meta data (url to album art etc)
+         *
+         * @returns {object}  Position info SOAP request
+         */
+        function positionInfo() {
             var my = {};
             var that = soapBase(my);
+
+            my.getServiceUri = function () {
+                return uri;
+            };
 
             my.getBody = function () {
                 return [
@@ -35,12 +54,14 @@ define(function (require) {
             };
 
             (function init() {
-                my.httpHeaders["SOAPACTION"] = "urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo";
+                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo");
             }());
 
             return that;
         }
 
-        return mediaInfo;
+        return {
+            positionInfo: positionInfo
+        };
     }
 );

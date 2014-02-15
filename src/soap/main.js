@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         return {
-            mediaInfo: require("soap/mediaInfo")
+            media: require("soap/media")
         };
     }
 );

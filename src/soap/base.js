@@ -22,33 +22,35 @@ define(function () {
 
         function soapBase(my) {
             my = my || {};
+
             var that = {};
 
-            my.httpHeaders = {
-                "CONTENT-TYPE": "charset=\"utf-8\""
+            var httpHeaders = [];
+
+            /**
+             * Returns a fully qualified URL to the SOAP service
+             * @param {string}      address     The IP address where the service is
+             * @returns {string}    URL
+             */
+            that.getUrl = function (address) {
+                return ["http://", address, my.getServiceUri()].join("");
             };
 
             /**
-             * Should be overridden by subclass
+             * Get an array of HTTP headers on the format
+             *      {header: "someHeaderName", value: "someHeaderValue"}
              *
-             * @returns {string}    SOAP XML body
+             * @returns {Array}     Array of HTTP headers
              */
-            my.getBody = function () {
-                return "";
-            };
-
             that.getHttpHeaders = function () {
-                var httpHeaders = [];
-
-                for (var header in my.httpHeaders) {
-                    if (my.httpHeaders.hasOwnProperty(header)) {
-                        httpHeaders.push({"header": header, "value": my.httpHeaders[header]});
-                    }
-                }
-
-                return httpHeaders;
+                return httpHeaders.slice();
             };
 
+            /**
+             * Get the XML payload part of SOAP message.
+             *
+             * @returns {string}
+             */
             that.getPayload = function () {
                 return [
                     "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'>",
@@ -57,6 +59,53 @@ define(function () {
                     "</s:Body></s:Envelope>"
                 ].join("");
             };
+
+
+            /**
+             * Add or update an existing header
+             *
+             * @param {string}  header  Name of the HTTP header
+             * @param {string}  value   Its value
+             */
+            my.setHttpHeader = function (header, value) {
+                var updated = false;
+                httpHeaders.forEach(function (httpHeader) {
+                    if (httpHeader.header === header) {
+                        updated = true;
+                        httpHeader.value = value;
+                    }
+                });
+                if (!updated) {
+                    httpHeaders.push({header: header, value: value});
+                }
+            };
+
+            /**
+             * The URI to the service that accepts this SOAP message.
+             *
+             * Should be implemented and overridden by subclass
+             *
+             * @returns {string}    Service URI to the service
+             */
+            my.getServiceUri = function () {
+                return "";
+            };
+
+            /**
+             * XML body of the SOAP message on simple string format.
+             *
+             * Should be implemented and overridden by subclass
+             *
+             * @returns {string}    SOAP XML body
+             */
+            my.getBody = function () {
+                return "";
+            };
+
+
+            (function init() {
+                my.setHttpHeader("CONTENT-TYPE", "charset=\"utf-8\"");
+            }());
 
             return that;
         }
