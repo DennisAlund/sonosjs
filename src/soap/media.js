@@ -60,7 +60,36 @@ define(function (require) {
             return that;
         }
 
+
+        /**
+         * This SOAP request will request a device to start playing whatever is currently paused on a device. The
+         * action will fail in case there aren't any song "currently playing" on the device.
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function play() {
+            var my = {};
+            var that = soapBase(my);
+
+            my.getServiceUri = function () {
+                return uri;
+            };
+
+            my.getBody = function () {
+                return "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>";
+            };
+
+            (function init() {
+                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Play");
+            }());
+
+            return that;
+        }
+
+
+
         return {
+            play: play,
             positionInfo: positionInfo
         };
     }
