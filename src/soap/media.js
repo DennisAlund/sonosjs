@@ -86,10 +86,33 @@ define(function (require) {
             return that;
         }
 
+        /**
+         * This SOAP request will request a device to pause the playback of whatever is currently playing on a device.
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function pause() {
+            var my = {};
+            var that = soapBase(my);
 
+            my.getServiceUri = function () {
+                return uri;
+            };
+
+            my.getBody = function () {
+                return "<u:Pause xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Pause>";
+            };
+
+            (function init() {
+                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Pause");
+            }());
+
+            return that;
+        }
 
         return {
             play: play,
+            pause: pause,
             positionInfo: positionInfo
         };
     }
