@@ -22,8 +22,6 @@ define(function (require) {
 
         var soapBase = require("./base");
 
-        var uri = "/MediaRenderer/AVTransport/Control";
-
         /**
          * This SOAP request will return the current media state from a device. The type of the returned information
          * depends on the type of media that is being played. For closer inspection of the returned data see
@@ -42,7 +40,7 @@ define(function (require) {
             var that = soapBase(my);
 
             my.getServiceUri = function () {
-                return uri;
+                return "/MediaRenderer/AVTransport/Control";
             };
 
             my.getBody = function () {
@@ -62,8 +60,8 @@ define(function (require) {
 
 
         /**
-         * This SOAP request will request a device to start playing whatever is currently paused on a device. The
-         * action will fail in case there aren't any song "currently playing" on the device.
+         * This SOAP request will request a device to start playing whatever is currently paused. The action will fail
+         * in case there aren't any song "currently playing" on the device.
          *
          * @returns {object}  Play music SOAP request
          */
@@ -72,7 +70,7 @@ define(function (require) {
             var that = soapBase(my);
 
             my.getServiceUri = function () {
-                return uri;
+                return "/MediaRenderer/AVTransport/Control";
             };
 
             my.getBody = function () {
@@ -87,7 +85,7 @@ define(function (require) {
         }
 
         /**
-         * This SOAP request will request a device to pause the playback of whatever is currently playing on a device.
+         * This SOAP request will request a device to pause the playback of whatever is currently playing.
          *
          * @returns {object}  Play music SOAP request
          */
@@ -96,7 +94,7 @@ define(function (require) {
             var that = soapBase(my);
 
             my.getServiceUri = function () {
-                return uri;
+                return "/MediaRenderer/AVTransport/Control";
             };
 
             my.getBody = function () {
