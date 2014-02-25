@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         var log = require("log");
-        var base = require("net/base");
+        var convert = require("net/convert");
 
         function http() {
             var that = {};
@@ -66,7 +66,7 @@ define(function (require) {
             that.request = function (url, soapMessage, options, callback) {
                 options = typeof(arguments[2]) === "object" ? arguments[2] : {};
 
-                options["body"] = base.toUint8Array(soapMessage.getPayload());
+                options["body"] = convert.toUint8Array(soapMessage.getPayload());
                 options["requestHeaders"] = soapMessage.getHttpHeaders();
 
                 httpRequest(url, "POST", options, callback);

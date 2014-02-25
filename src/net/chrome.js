@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         var log = require("log");
-        var baseNet = require("net/base");
+        var convert = require("net/convert");
         var env = require("utils/environment");
 
         var isSupported = (chrome && chrome.socket) ? true : false;
@@ -92,7 +92,7 @@ define(function (require) {
             };
 
             that.send = function (message) {
-                chrome.socket.sendTo(socketId, baseNet.toBuffer(message), remoteIp, remotePort, function (info) {
+                chrome.socket.sendTo(socketId, convert.toBuffer(message), remoteIp, remotePort, function (info) {
                     if (info.bytesWritten < 0) {
                         log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
                     }
@@ -107,7 +107,7 @@ define(function (require) {
                 }
 
                 if (consumer) {
-                    consumer(baseNet.fromBuffer(result.data));
+                    consumer(convert.fromBuffer(result.data));
                 }
             }
 
