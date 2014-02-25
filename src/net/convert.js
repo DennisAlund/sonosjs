@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,8 +22,9 @@ define(function () {
 
         function toUint8Array(str) {
             str = str || "";
-            var codeArray = str.codes().map(function (c) {
-                return c & 0xff;
+
+            var codeArray = str.split("").map(function (character) {
+                return character.charCodeAt(0) & 0xff;
             });
             return new Uint8Array(codeArray);
         }
