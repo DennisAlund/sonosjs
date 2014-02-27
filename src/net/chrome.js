@@ -48,17 +48,16 @@ define(function (require) {
             };
 
             that.open = function (callback) {
-                chrome.socket.create("udp", function (info) {
+                chrome.sockets.udp.create(function (info) {
                     socketId = info.socketId;
                     log.debug("Creating socket '%d'", socketId);
-                    chrome.socket.bind(socketId, "0.0.0.0", localPort, function (result) {
-                        if (result !== 0) {
-                            log.error("Failed to bind socket %d for %s:%d", socketId, remoteIp, remotePort);
+                    chrome.sockets.udp.bind(socketId, "0.0.0.0", localPort, function (result) {
+                        if (result < 0) {
+                            log.error("Failed to bind socket %d for %s:%d (error: %d)", socketId, remoteIp, remotePort, result);
                             that.close();
                             return;
                         }
 
-                        chrome.socket.recvFrom(socketId, receiveData);
                         if (autoCloseTimeout > 0) {
                             that.close.delay(autoCloseTimeout);
                         }
@@ -70,17 +69,18 @@ define(function (require) {
 
             that.close = function () {
                 if (!that.isClosed()) {
-                    log.debug("Closing socket '%d'", socketId);
-                    chrome.socket.destroy(socketId);
-                    socketId = 0;
+                    chrome.sockets.udp.close(socketId, function () {
+                        log.debug("Closed socket '%d'", socketId);
+                        socketId = 0;
+                    });
                 }
             };
 
             that.joinMulticast = function () {
-                chrome.socket.setMulticastTimeToLive(socketId, 2, function () {
-                    chrome.socket.setMulticastLoopbackMode(socketId, false, function () {
-                        chrome.socket.joinGroup(socketId, remoteIp, function (result) {
-                            if (result !== 0) {
+                chrome.sockets.udp.setMulticastTimeToLive(socketId, 2, function () {
+                    chrome.sockets.udp.setMulticastLoopbackMode(socketId, false, function () {
+                        chrome.sockets.udp.joinGroup(socketId, remoteIp, function (result) {
+                            if (result < 0) {
                                 log.error("Could not join group. Error code: %d", result);
                                 that.close();
                                 return;
@@ -92,24 +92,41 @@ define(function (require) {
             };
 
             that.send = function (message) {
-                chrome.socket.sendTo(socketId, convert.toBuffer(message), remoteIp, remotePort, function (info) {
-                    if (info.bytesWritten < 0) {
-                        log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
-                    }
-                });
+                var buf = convert.toBuffer(message);
+                chrome.sockets.udp.send(socketId, buf, remoteIp, remotePort, onSend);
             };
 
-            function receiveData(result) {
-                chrome.socket.recvFrom(socketId, receiveData);
-                if (result.resultCode < 0) {
-                    log.error("Failed to read from socket %d. Error code: %d", socketId, result.resultCode);
-                    return;
-                }
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // PRIVATE METHODS
 
-                if (consumer) {
-                    consumer(convert.fromBuffer(result.data));
+            function onSend(info) {
+                if (info.bytesWritten < 0) {
+                    log.error("Failed to send on socket '%d' for %s:%d", socketId, remoteIp, remotePort);
                 }
             }
+
+            function onReceive(info) {
+                if (consumer) {
+                    consumer(convert.fromBuffer(info.data));
+                }
+            }
+
+            function onReceiveError(info) {
+                var peerSocketId = info.socketId;
+                log.warn("Got error code '%d' on UDP socket '%d'", info.resultCode, peerSocketId);
+                that.close();
+            }
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // INIT
+
+            (function init() {
+                chrome.sockets.udp.onReceive.addListener(onReceive);
+                chrome.sockets.udp.onReceiveError.addListener(onReceiveError);
+            }());
+
 
             return that;
         }
