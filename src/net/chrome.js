@@ -22,9 +22,10 @@ define(function (require) {
 
         var log = require("log");
         var convert = require("net/convert");
+        var httpResponse = require("net/httpResponse");
         var env = require("utils/environment");
 
-        var isSupported = (chrome && chrome.socket) ? true : false;
+        var isSupported = (chrome && chrome.sockets) ? true : false;
 
         if (isSupported) {
             if (navigator && navigator.userAgent) {
@@ -114,7 +115,7 @@ define(function (require) {
 
             function onReceiveError(info) {
                 var peerSocketId = info.socketId;
-                log.warn("Got error code '%d' on UDP socket '%d'", info.resultCode, peerSocketId);
+                log.warning("Got error code '%d' on UDP socket '%d'", info.resultCode, peerSocketId);
                 that.close();
             }
 
@@ -260,12 +261,23 @@ define(function (require) {
                     body: dataParts.join("\r\n\r\n")
                 };
                 var requestPath = extractPathFromHttpHeaders(httpRequest.headers);
+                var response;
                 if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
-                    routes[requestPath](httpRequest);
+                    response = httpResponse.http200({
+                        body: routes[requestPath](httpRequest)
+                    });
                 }
 
                 else {
-                    respondHttp404();
+					response = httpResponse.http404();
+                }
+
+                chrome.sockets.tcp.send(info.socketId, convert.toBuffer(response.toData()), onSend);
+            }
+
+            function onSend(info) {
+                if (info.resultCode < 0) {
+                    log.warning("Failed to send HTTP response.");
                 }
             }
 
@@ -277,20 +289,15 @@ define(function (require) {
             }
 
             function onReceiveError(info) {
-                var clientSocketId = info.clientSocketId;
+                var clientSocketId = info.socketId;
                 chrome.sockets.tcp.getInfo(clientSocketId, function (clientSocket) {
-                    log.warn("Got error code '%d' on client socket '%d' (%s:%d)",
+                    log.warning("Got error code '%d' on TCP socket '%d' (%s:%d). Disconnecting.",
                         info.resultCode, clientSocketId, clientSocket.peerAddress, clientSocket.peerPort);
                     chrome.sockets.tcp.disconnect(clientSocketId);
                 });
 
             }
 
-            //the high-water mark—that place where the wave finally broke and rolled back
-            // 404 - The page where the wave finally broke and rolled back
-            function respondHttp404() {
-
-            }
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
@@ -312,5 +319,4 @@ define(function (require) {
             udpSocket: udpSocket
         };
     }
-)
-;
+);
