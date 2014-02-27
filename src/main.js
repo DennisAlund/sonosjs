@@ -43,6 +43,7 @@ define(function (require) {
 
             var isServiceRunning = false;
             var multicastGroupSocket;
+            var httpServer;
             var devices = {};
 
             /**
@@ -57,20 +58,21 @@ define(function (require) {
 
                 log.info("Starting the Sonos UPnP controller");
                 isServiceRunning = true;
-                if (multicastGroupSocket && !multicastGroupSocket.isClosed()) {
-                    return;
+
+                if (!multicastGroupSocket || multicastGroupSocket.isClosed()) {
+                    multicastGroupSocket = net.socket.udp({
+                        remoteIp: "239.255.255.250",
+                        localPort: 1900,
+                        consumer: onMulticastNotification
+                    });
+
+
+                    multicastGroupSocket.open(function () {
+                        multicastGroupSocket.joinMulticast();
+                    });
                 }
 
-                multicastGroupSocket = net.socket.udp({
-                    remoteIp: "239.255.255.250",
-                    localPort: 1900,
-                    consumer: onMulticastNotification
-                });
-
-
-                multicastGroupSocket.open(function () {
-                    multicastGroupSocket.joinMulticast();
-                });
+                httpServer.start();
 
                 // Just send out whatever we got to start with
                 event.trigger(event.action.DEVICES, getDevices());
@@ -88,6 +90,7 @@ define(function (require) {
             that.stop = function () {
                 log.info("Stopping the Sonos UPnP controller");
                 isServiceRunning = false;
+                httpServer.pause();
                 if (!multicastGroupSocket || multicastGroupSocket.isClosed()) {
                     return;
                 }
@@ -314,6 +317,14 @@ define(function (require) {
                     });
                 });
             }
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // INIT
+
+            (function init() {
+                httpServer = net.httpServer({port: 1337});
+            }());
 
             return that;
         }

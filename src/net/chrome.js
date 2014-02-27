@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,9 +115,185 @@ define(function (require) {
         }
 
 
+        /**
+         * Using chrome.sockets API requiring Chrome version >= 33
+         *
+         * @param {object}  [opts]  Optional configuration options
+         * @returns {object}        A http server
+         */
+        function httpServer(opts) {
+            opts = opts || {};
+            var that = {};
+            var listenPort = opts.port || 0;
+            var socketId = 0;
+            var routes = {};
+
+            that.getPort = function () {
+                return listenPort;
+            };
+
+
+            /**
+             * Simple mapping of a route to a callback function that will process the request.
+             * The callback method should look like this: function({object} data)
+             * The properties of the data object is
+             *      headers     {string}    A multi line string with HTTP headers
+             *      body        {string}    A multi line string with the HTML body (optional)
+             *
+             *
+             *  - A route should be on the form "/some/path". Without scheme and host.
+             *  - Routes are unique by string comparison (i.e. /this/path is different from /this/path/)
+             *  - Re-registering a route will overwrite the existing route with the new.
+             *
+             * @param {string}      route       A resource path
+             * @param {function}    callback    Callback method for handling requests
+             */
+            that.addRoute = function (route, callback) {
+                routes[route] = callback;
+            };
+
+            /**
+             * Remove a route from the server. Does nothing if the route does not exist.
+             *
+             * @param {string}      route       A resource path
+             */
+            that.removeRoute = function (route) {
+                if (!route) {
+                    return;
+                }
+
+                if (routes.hasOwnProperty(route)) {
+                    delete(routes[route]);
+                }
+            };
+
+            /**
+             * Start the server
+             *  - If the server is paused; it will be un-paused
+             *  - If the server socket destroyed it will be created
+             */
+            that.start = function () {
+                if (socketId > 0) {
+                    chrome.sockets.tcpServer.getInfo(socketId, function (socketInfo) {
+                        if (socketInfo.paused) {
+                            chrome.sockets.tcpServer.setPaused(socketId, false);
+                        }
+                    });
+
+                    return;
+                }
+
+                chrome.sockets.tcpServer.create(function (createInfo) {
+                    socketId = createInfo.socketId;
+                    chrome.sockets.tcpServer.listen(socketId, "0.0.0.0", listenPort, function (result) {
+                        if (result < 0) {
+                            throw new Error("Failed to start httpServer on port: " + listenPort);
+                        }
+
+                        chrome.sockets.tcpServer.getInfo(socketId, function (socketInfo) {
+                            listenPort = socketInfo.localPort;
+                            log.info("Started httpServer on %s:%d", socketInfo.localAddress, listenPort);
+                            log.debug("http://localhost:%d", listenPort);
+                        });
+                    });
+
+                });
+            };
+
+            /**
+             * Pauses the server. Incoming connection will not be dispatched to onAccept()
+             * The server can be started again by calling start()
+             */
+            that.pause = function () {
+                chrome.sockets.tcpServer.setPaused(socketId, true);
+            };
+
+            /**
+             * Shut down the server completely.
+             *
+             */
+            that.close = function () {
+                if (socketId > 0) {
+                    chrome.sockets.tcpServer.close(socketId, function () {
+                        log.event("Shutting down the http server.");
+                        socketId = 0;
+                    });
+                }
+            };
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // PRIVATE METHODS
+
+
+            function onAccept(info) {
+                var clientSocketId = info.clientSocketId;
+                chrome.sockets.tcp.getInfo(clientSocketId, function (clientSocket) {
+                    log.debug("Got connection on client socket '%d' (%s:%d)",
+                        clientSocketId, clientSocket.peerAddress, clientSocket.peerPort);
+                    chrome.sockets.tcp.setPaused(clientSocketId, false);
+                });
+            }
+
+            function onReceive(info) {
+                var data = convert.fromBuffer(info.data);
+                var dataParts = data.split("\r\n\r\n");
+                var httpRequest = {
+                    headers: dataParts.shift(),
+                    body: dataParts.join("\r\n\r\n")
+                };
+                var requestPath = extractPathFromHttpHeaders(httpRequest.headers);
+                if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
+                    routes[requestPath](httpRequest);
+                }
+
+                else {
+                    respondHttp404();
+                }
+            }
+
+            function extractPathFromHttpHeaders(headers) {
+                var firstLine = headers.split("\r\n")[0] || "";
+                var path = firstLine.match(/\w+\s+(.*)\sHTTP\/1\.1/i);
+
+                return path.length === 2 ? path[1] : "/";
+            }
+
+            function onReceiveError(info) {
+                var clientSocketId = info.clientSocketId;
+                chrome.sockets.tcp.getInfo(clientSocketId, function (clientSocket) {
+                    log.warn("Got error code '%d' on client socket '%d' (%s:%d)",
+                        info.resultCode, clientSocketId, clientSocket.peerAddress, clientSocket.peerPort);
+                    chrome.sockets.tcp.disconnect(clientSocketId);
+                });
+
+            }
+
+            //the high-water mark—that place where the wave finally broke and rolled back
+            // 404 - The page where the wave finally broke and rolled back
+            function respondHttp404() {
+
+            }
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // INIT
+
+            (function init() {
+                chrome.sockets.tcpServer.onAccept.addListener(onAccept);
+                chrome.sockets.tcp.onReceive.addListener(onReceive);
+                chrome.sockets.tcp.onReceiveError.addListener(onReceiveError);
+            }());
+
+            return that;
+        }
+
+
         return {
             isSupported: isSupported,
+            httpServer: httpServer,
             udpSocket: udpSocket
         };
     }
-);
+)
+;

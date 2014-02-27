@@ -24,10 +24,12 @@ define(function (require) {
     var chrome = require("net/chrome");
     var http = require("net/http");
     var udpSocket = null;
+    var httpServer = null;
 
     if (chrome.isSupported) {
         log.info("Networking module found support for chrome sockets.");
         udpSocket = chrome.udpSocket;
+        httpServer = chrome.httpServer;
     }
     else {
         log.warning("Networking module didn't find any suitable networking support.");
@@ -41,6 +43,7 @@ define(function (require) {
             udp: udpSocket
         };
 
+        that.httpServer = httpServer;
         that.http = http.http();
         that.soap = http.soap();
 
