@@ -22,6 +22,24 @@ define(function (require) {
 
         var soapBase = require("./base");
 
+        function mediaBase(opts, my) {
+            opts = opts || {};
+            my = my || {};
+            var that = soapBase(my);
+
+            var soapAction = opts.action || "UNKNOWN";
+
+            my.getServiceUri = function () {
+                return "/MediaRenderer/AVTransport/Control";
+            };
+
+            (function init() {
+                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#" + soapAction);
+            }());
+
+            return that;
+        }
+
         /**
          * This SOAP request will return the current media state from a device. The type of the returned information
          * depends on the type of media that is being played. For closer inspection of the returned data see
@@ -37,11 +55,7 @@ define(function (require) {
          */
         function positionInfo() {
             var my = {};
-            var that = soapBase(my);
-
-            my.getServiceUri = function () {
-                return "/MediaRenderer/AVTransport/Control";
-            };
+            var that = mediaBase({action: "GetPositionInfo"}, my);
 
             my.getBody = function () {
                 return [
@@ -50,10 +64,6 @@ define(function (require) {
                     "</u:GetPositionInfo>"
                 ].join("");
             };
-
-            (function init() {
-                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo");
-            }());
 
             return that;
         }
@@ -67,19 +77,11 @@ define(function (require) {
          */
         function play() {
             var my = {};
-            var that = soapBase(my);
-
-            my.getServiceUri = function () {
-                return "/MediaRenderer/AVTransport/Control";
-            };
+            var that = mediaBase({action: "Play"}, my);
 
             my.getBody = function () {
                 return "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>";
             };
-
-            (function init() {
-                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Play");
-            }());
 
             return that;
         }
@@ -91,19 +93,11 @@ define(function (require) {
          */
         function pause() {
             var my = {};
-            var that = soapBase(my);
-
-            my.getServiceUri = function () {
-                return "/MediaRenderer/AVTransport/Control";
-            };
+            var that = mediaBase({action: "Pause"}, my);
 
             my.getBody = function () {
                 return "<u:Pause xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Pause>";
             };
-
-            (function init() {
-                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Pause");
-            }());
 
             return that;
         }
@@ -116,19 +110,116 @@ define(function (require) {
          */
         function nextTrack() {
             var my = {};
-            var that = soapBase(my);
-
-            my.getServiceUri = function () {
-                return "/MediaRenderer/AVTransport/Control";
-            };
+            var that = mediaBase({action: "Next"}, my);
 
             my.getBody = function () {
                 return "<u:Next xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Next>";
             };
 
-            (function init() {
-                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Next");
-            }());
+            return that;
+        }
+
+        /**
+         * This SOAP request will set a media stream to start at a certain offset
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function seek() {
+            var my = {};
+            var that = mediaBase({action: "Seek"}, my);
+
+            var time = {
+                hours: 0,
+                minutes: 0,
+                seconds: 0
+            };
+
+            that.setSeconds = function (seconds) {
+                seconds = seconds || 0;
+                time.hours = Math.floor(seconds / 3600);
+                time.minutes = Math.floor((seconds % 3600) / 60);
+                time.seconds = seconds % 60;
+                console.log(time);
+            };
+
+            my.getBody = function () {
+                var targetTime = [time.hours, time.minutes, time.seconds].join(":");
+                return ["<u:Seek xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
+                    "<Unit>REL_TIME</Unit><Target>",
+                    targetTime,
+                    "</Target></u:Seek>"].join("");
+            };
+
+            return that;
+        }
+
+        /**
+         * This SOAP request will set the volume on a device
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function setVolume() {
+            var my = {};
+            var that = mediaBase({action: "SetVolume"}, my);
+
+            var volume;
+
+            that.setVolume = function (newVolume) {
+                volume = newVolume || 0;
+            };
+
+            my.getBody = function () {
+                return ["<u:SetVolume xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
+                    "<Channel>Master</Channel><DesiredVolume>",
+                    volume,
+                    "</DesiredVolume></u:SetVolume>"].join("");
+            };
+
+            return that;
+        }
+
+        /**
+         * This SOAP request will mute or unmute the volume on a device
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function setMute() {
+            var my = {};
+            var that = mediaBase({action: "SetMute"}, my);
+
+            var muteFlag;
+
+            that.setMute = function (isMuted) {
+                muteFlag = isMuted === true ? 1 : 0;
+            };
+
+            my.getBody = function () {
+                return ["<u:SetMute xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
+                    "<Channel>Master</Channel><DesiredMute>",
+                    muteFlag,
+                    "</DesiredMute></u:SetMute>"].join("");
+            };
+
+            return that;
+        }
+
+        /**
+         * This SOAP request will set play mode such as repeat, shuffle, etc of a device
+         *
+         * @returns {object}  Play music SOAP request
+         */
+        function setPlayMode() {
+            var my = {};
+            var that = mediaBase({action: "SetPlayMode"}, my);
+
+            var playModeFlag = "";
+
+            my.getBody = function () {
+                return ["<u:SetPlayMode xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
+                    "<NewPlayMode>",
+                    playModeFlag,
+                    "</NewPlayMode></u:SetPlayMode>"].join("");
+            };
 
             return that;
         }
@@ -137,6 +228,10 @@ define(function (require) {
             play: play,
             pause: pause,
             nextTrack: nextTrack,
+            seek: seek,
+            setVolume: setVolume,
+            setMute: setMute,
+            setPlayMode: setPlayMode,
             positionInfo: positionInfo
         };
     }
