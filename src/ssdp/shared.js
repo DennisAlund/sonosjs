@@ -112,6 +112,9 @@ define(function (require) {
             case "X-RINCON-HOUSEHOLD":
                 opts.householdToken = value;
                 break;
+            case "SID":
+                opts.subscriptionId = value;
+                break;
             case "EXT":
                 // Supported but ignored
                 break;

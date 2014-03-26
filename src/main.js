@@ -119,7 +119,7 @@ define(function (require) {
                 var location = null;
                 if (typeof(info) === "string") {
                     if (devices.hasOwnProperty(info)) {
-                        location = devices[info].getInfoUrl();
+                        location = devices[info].infoUrl;
                     }
                     else {
                         location = info;
@@ -150,9 +150,10 @@ define(function (require) {
                     log.warning("No device in cache with id: %s", deviceId);
                 }
 
+                var soapRequest = soap.media.positionInfo();
                 net.soap.request(
-                    device.getMediaStateUrl(),
-                    soap.media.positionInfo(),
+                    soapRequest.getUrl(device.ip, device.port),
+                    soapRequest,
                     function soapMediaInfoCallback(xml) {
                         var mediaInfo = models.mediaInfo.fromXml(xml);
                         if (mediaInfo) {
@@ -193,6 +194,7 @@ define(function (require) {
                 devices[device.id] = device;
                 if (isNew) {
                     log.debug("Added new device: %s", device.id);
+                    register(device);
                     event.trigger(event.action.DEVICES, getDevices());
                 }
                 else {
@@ -212,8 +214,8 @@ define(function (require) {
 
                 for (var deviceId in devices) {
                     if (devices.hasOwnProperty(deviceId)) {
-                        if (devices[deviceId].getLastUpdated() <= referenceTime) {
-                            var url = devices[deviceId].getInfoUrl();
+                        if (devices[deviceId].lastUpdated <= referenceTime) {
+                            var url = devices[deviceId].infoUrl;
                             removeDevice(deviceId);
                             requestDeviceDetails(url);
                         }
@@ -232,7 +234,12 @@ define(function (require) {
                     location,
                     function xhrCallback(xml) {
                         var device = models.device.fromXml(xml);
-                        device.setInfoUrl(location);
+                        device.infoUrl = location;
+
+                        var address = net.utils.extractAddressFromUrl(location).split(":");
+                        device.ip = address[0];
+                        device.port = address[1] || device.port;
+
                         addDevice(device);
                     }
                 );
@@ -319,6 +326,52 @@ define(function (require) {
                     }, 30000); // Close after 30 seconds
                 });
             }
+
+            /**
+             * Register the controller for receiving push events from media devices.
+             *
+             * The subscription message looks something like this
+             *
+             *      SUBSCRIBE /ZoneGroupTopology/Event HTTP/1.1
+             *      HOST: 192.168.1.63:1400
+             *      USER-AGENT: OS/version UPnP/1.1 product/version
+             *      CALLBACK: <http://192.168.1.12:3400/notify>
+             *      NT: upnp:event
+             *      TIMEOUT: Second-3600
+             *
+             * @param {Object}      options
+             * @param {string}      options.remoteIp        Remote IP
+             * @param {number}      options.remotePort      Remote port
+             * @param {number}      options.callbackPort    Local port that the event server is listening to
+             */
+            function register(device) {
+                var httpServerSocketInfo = net.socket.httpServer.getSocketInfo(httpServerSocket);
+
+                device.services.forEach(function (servicePath) {
+                    var socketOptions = {
+                        remoteIp: device.ip,
+                        remotePort: device.port,
+                        timeout: 10,
+                        autoClose: true,
+                        consumer: function (info) {
+                            var subscriptionResponse = ssdp.subscribe.response.fromData(info.data);
+                            if (subscriptionResponse) {
+                                device.addServiceSubscriptionId(servicePath, subscriptionResponse.subscriptionId);
+                                log.debug("Registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
+                            }
+                        }
+                    };
+
+                    net.socket.tcp.open(socketOptions, function (socketInfo) {
+                        var subscriptionRequest = ssdp.subscribe.request({
+                            servicePath: servicePath,
+                            remoteIp: device.ip,
+                            remotePort: device.port,
+                            localIp: socketInfo.localIp,
+                            localPort: httpServerSocketInfo.port
+                        });
+
+                        net.socket.tcp.send(socketInfo.socketId, subscriptionRequest.toData());
                     });
                 });
             }

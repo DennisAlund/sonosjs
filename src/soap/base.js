@@ -29,10 +29,12 @@ define(function () {
 
             /**
              * Returns a fully qualified URL to the SOAP service
-             * @param {string}      address     The IP address where the service is
+             * @param {string}      ip      The IP for the service
+             * @param {port}        [port]  Optional port for the service
              * @returns {string}    URL
              */
-            that.getUrl = function (address) {
+            that.getUrl = function (ip, port) {
+                var address = port ? ip + ":" + port : ip;
                 return ["http://", address, my.getServiceUri()].join("");
             };
 
@@ -52,10 +54,15 @@ define(function () {
              * @returns {string}
              */
             that.getPayload = function () {
+                var body = my.getBody();
+                if (!body) {
+                    return "";
+                }
+
                 return [
                     "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'>",
                     "<s:Body>",
-                    my.getBody(),
+                    body,
                     "</s:Body></s:Envelope>"
                 ].join("");
             };

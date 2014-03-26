@@ -24,44 +24,37 @@ define(function (require) {
 
         function device(opts) {
             opts = opts || {};
-            var that = opts;
 
-            var lastUpdated = Date.now();
-            var address; // Only IP and port
-            var infoUrl; // Full URL to the service
+            var that = {};
+            var registeredServices = {};
 
-            that.address = "";
+            that.id = opts.id;
+            that.displayName = opts.displayName;
+            that.speakerSize = opts.speakerSize;
+            that.deviceType = opts.deviceType;
+            that.groupName = opts.groupName;
+            that.services = opts.services ? opts.services.slice() : [];
+            that.icons = opts.icons ? opts.icons.slice() : [];
+            that.ip = null;
+            that.port = 1400;
+            that.lastUpdated = Date.now();
+            that.infoUrl = null; // Full URL to the service
+
+
+            that.addServiceSubscriptionId = function (service, serviceId) {
+                registeredServices[service] = serviceId;
+            };
+
+            that.getServiceSubscriptionId = function (service) {
+                if (registeredServices.hasOwnProperty(service)) {
+                    return registeredServices[service];
+                }
+                return "";
+            };
 
             that.getUniqueServiceName = function () {
-                return [that.id, that.device.type].join("::");
+                return [that.id, that.deviceType].join("::");
             };
-
-            that.getLastUpdated = function () {
-                return lastUpdated;
-            };
-
-            that.getInfoUrl = function () {
-                return infoUrl;
-            };
-
-            that.setInfoUrl = function (deviceInfoUrl) {
-                infoUrl = deviceInfoUrl || "";
-                address = extractHostFromUrl(infoUrl);
-                that.address = address;
-            };
-
-            that.getMediaStateUrl = function () {
-                return formatServiceUrl("/MediaRenderer/AVTransport/Control");
-            };
-
-
-            function extractHostFromUrl(url) {
-                return url.replace(/http[s]?:\/\/([^\/]+).*/g, "$1");
-            }
-
-            function formatServiceUrl(serviceUri) {
-                return ["http://", address,  serviceUri].join("");
-            }
 
             return that;
         }
@@ -72,13 +65,10 @@ define(function (require) {
                 id: xmlDocument.getValue("UDN"),
                 displayName: xmlDocument.getValue("displayName"),
                 speakerSize: xmlDocument.getValue("internalSpeakerSize"),
-                device: {
-                    type: xmlDocument.getValue("deviceType"),
-                    icons: xmlDocument.getValueList("iconList.url")
-                },
-                group: {
-                    name: xmlDocument.getValue("roomName")
-                }
+                services: xmlDocument.getValueList("serviceList.eventSubURL"),
+                deviceType: xmlDocument.getValue("deviceType"),
+                icons: xmlDocument.getValueList("iconList.url"),
+                groupName: xmlDocument.getValue("roomName")
             };
 
             return device(opts);

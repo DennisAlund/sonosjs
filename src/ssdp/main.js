@@ -26,6 +26,7 @@ define(function (require) {
             advertisementType: shared.advertisementType,
             discoveryRequest: require("ssdp/discoveryRequest"),
             discoveryResponse: require("ssdp/discoveryResponse"),
+            subscribe: require("ssdp/subscribe"),
             notification: require("ssdp/notification")
         };
     }
