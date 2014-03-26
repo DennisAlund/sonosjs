@@ -27,6 +27,7 @@ define(function (require) {
             discoveryRequest: require("ssdp/discoveryRequest"),
             discoveryResponse: require("ssdp/discoveryResponse"),
             subscribe: require("ssdp/subscribe"),
+            unsubscribe: require("ssdp/unsubscribe"),
             notification: require("ssdp/notification")
         };
     }

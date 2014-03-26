@@ -184,6 +184,7 @@ define(function (require) {
 
             function removeDevice(deviceId) {
                 if (devices.hasOwnProperty(deviceId)) {
+                    unregister(devices[deviceId]);
                     delete(devices[deviceId]);
                     event.trigger(event.action.DEVICES, getDevices());
                 }
@@ -364,6 +365,37 @@ define(function (require) {
                 });
             }
 
+
+            /**
+             * Un-register the controller from receiving any further push events from media devices.
+             *
+             * @param {Object}  device  The device to un-register services for
+             */
+            function unregister(device) {
+                device.services.forEach(function (servicePath) {
+                    var subscriptionId = device.getServiceSubscriptionId(servicePath);
+                    var socketOptions = {
+                        remoteIp: device.ip,
+                        remotePort: device.port,
+                        timeout: 10,
+                        autoClose: true,
+                        consumer: function () {
+                            log.debug("Unregistered event service '%s' with id '%s'", servicePath, subscriptionId);
+                        }
+                    };
+
+                    net.socket.tcp.open(socketOptions, function (socketInfo) {
+                        var subscriptionRequest = ssdp.unsubscribe.request({
+                            servicePath: servicePath,
+                            remoteIp: device.ip,
+                            remotePort: device.port,
+                            subscriptionId: subscriptionId
+                        });
+
+                        net.socket.tcp.send(socketInfo.socketId, subscriptionRequest.toData());
+                    });
+                });
+            }
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
