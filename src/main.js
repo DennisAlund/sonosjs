@@ -42,16 +42,21 @@ define(function (require) {
             var that = {};
 
             var isServiceRunning = false;
-            var multicastGroupSocket;
+            var multicastGroupSocket = 0;
+            var httpServerSocket = 0;
             var httpServer;
             var devices = {};
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // PUBLIC API
 
             /**
              * Start up the UPnP controller
              * Join the SSDP multicast group and start receiving notifications.
              */
             that.start = function () {
-                if (!net.haveSocketSupport) {
+                if (!net.socket.isSupported()) {
                     log.error("No socket support. Can not run Sonos controller.");
                     return;
                 }
@@ -59,20 +64,19 @@ define(function (require) {
                 log.info("Starting the Sonos UPnP controller");
                 isServiceRunning = true;
 
-                if (!multicastGroupSocket || multicastGroupSocket.isClosed()) {
-                    multicastGroupSocket = net.socket.udp({
-                        remoteIp: "239.255.255.250",
+                if (multicastGroupSocket === 0) {
+                    var socketOptions = {
                         localPort: 1900,
                         consumer: onMulticastNotification
-                    });
+                    };
 
-
-                    multicastGroupSocket.open(function () {
-                        multicastGroupSocket.joinMulticast();
+                    net.socket.udp.open(socketOptions, function (socketInfo) {
+                        multicastGroupSocket = socketInfo.socketId;
+                        net.socket.udp.joinMulticast(multicastGroupSocket, "239.255.255.250");
                     });
                 }
 
-                httpServer.start();
+                net.socket.httpServer.start(httpServerSocket);
 
                 // Just send out whatever we got to start with
                 event.trigger(event.action.DEVICES, getDevices());
@@ -90,11 +94,9 @@ define(function (require) {
             that.stop = function () {
                 log.info("Stopping the Sonos UPnP controller");
                 isServiceRunning = false;
-                httpServer.pause();
-                if (!multicastGroupSocket || multicastGroupSocket.isClosed()) {
-                    return;
-                }
-                multicastGroupSocket.close();
+                net.socket.httpServer.stop(httpServerSocket);
+                net.socket.udp.close(multicastGroupSocket);
+                multicastGroupSocket = 0;
             };
 
             /**
@@ -240,10 +242,12 @@ define(function (require) {
             /**
              * This function is called for each response that is received after explicitly making a SSDP search request.
              *
-             * @param {string} data     SSDP discovery response
+             * @param {Object} info
+             * @param {number} info.socketId    Socket id
+             * @param {string} info.data        SSDP discovery response data
              */
-            function onDiscoveryResponse(data) {
-                var discoveryResponse = ssdp.discoveryResponse.fromData(data);
+            function onDiscoveryResponse(info) {
+                var discoveryResponse = ssdp.discoveryResponse.fromData(info.data);
                 if (!discoveryResponse) {
                     return;
                 }
@@ -258,10 +262,12 @@ define(function (require) {
              * This function is called for each SSDP notification that is received in the SSDP multicast group. This can
              * happen at any time without any explicit action from the service.
              *
-             * @param {string} data     SSDP notification
+             * @param {Object} info
+             * @param {number} info.socketId    Socket id
+             * @param {string} info.data        SSDP notification
              */
-            function onMulticastNotification(data) {
-                var notification = ssdp.notification.fromData(data);
+            function onMulticastNotification(info) {
+                var notification = ssdp.notification.fromData(info.data);
 
                 if (!notification) {
                     return;
@@ -292,38 +298,40 @@ define(function (require) {
             function discover() {
                 log.info("Sending discovery on Sonos UPnP controller");
 
-                var discoveryMessage = ssdp.discoveryRequest({
-                    targetScope: "urn:schemas-upnp-org:device:ZonePlayer:1",
-                    maxWaitTime: 5
-                });
-
                 // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
-                // Add a couple of seconds before closing the socket seems to be a good idea
-                var socket = net.socket.udp({
-                    remoteIp: "239.255.255.250",
-                    remotePort: 1900,
-                    timeout: 30,
-                    consumer: onDiscoveryResponse
-                });
+                // Keeping socket open for some time to see if anything is stumbling in
+                net.socket.udp.open({consumer: onDiscoveryResponse}, function (socketInfo) {
+                    var discoveryMessage = ssdp.discoveryRequest({
+                        targetScope: "urn:schemas-upnp-org:device:ZonePlayer:1",
+                        maxWaitTime: 5
+                    });
 
-                socket.open(function () {
-                    // Send each discovery request a number of times in hope that all devices are reached
                     var data = discoveryMessage.toData();
                     [0, 1, 2, 3].forEach(function (time) {
                         setTimeout(function () {
                             log.debug("Sending discovery request %d", time);
-                            socket.send(data);
-                        }, time * 500);
+                            net.socket.udp.send(socketInfo.socketId, data, "239.255.255.250", 1900);
+                        }, time * 1000);
+                    });
+
+                    setTimeout(function () {
+                        net.socket.udp.close(socketInfo.socketId);
+                    }, 30000); // Close after 30 seconds
+                });
+            }
                     });
                 });
             }
 
+
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
-            // INIT
+            // INITIALIZE THE SERVICE
 
             (function init() {
-                httpServer = net.httpServer({port: 1337});
+                httpServer = net.socket.httpServer.create({localPort: 1337}, function (socketInfo) {
+                    httpServerSocket = socketInfo.socketId;
+                });
             }());
 
             return that;

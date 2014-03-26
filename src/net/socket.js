@@ -18,21 +18,25 @@
  * ------------------------------------------------------------------------- */
 
 define(function (require) {
-    "use strict";
+        "use strict";
 
-    var http = require("net/http");
-    var socket = require("net/socket");
+        var log = require("log");
+        var chrome = require("net/environments/chrome");
 
-    function extractAddressFromUrl(url) {
-        return url.replace(/http[s]?:\/\/([^\/]+).*/g, "$1");
-    }
+        var socketModule = {
+            isSupported: function () {
+                return false;
+            }
+        };
 
-    return {
-        socket: socket,
-        http: http.http(),
-        soap: http.soap(),
-        utils: {
-            extractAddressFromUrl: extractAddressFromUrl
+        if (chrome.isSupported()) {
+            log.info("Found socket support for chrome.");
+            socketModule = chrome;
         }
-    };
-});
+        else {
+            log.warning("Didn't find any suitable module for socket support.");
+        }
+
+        return socketModule;
+    }
+);
