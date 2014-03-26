@@ -48,7 +48,7 @@ define(function (require) {
             var userAgent = opts.userAgent || env.USER_AGENT;
 
             /**
-             * Serializes the object into a SSDP discovery request on the form
+             * Serializes the object into a SSDP subscription request on the form
              *
              *      SUBSCRIBE /ZoneGroupTopology/Event HTTP/1.1
              *      HOST: 192.168.1.63:1400
@@ -75,12 +75,11 @@ define(function (require) {
         }
 
         /**
-         * SSDP discovery response
-         * Very much similar to the multicast notification message, although this one is only as a reply to a SSDP
-         * request.
+         * SSDP subscription response
          *
-         * @param {Object} opts Preset values
-         * @returns {Object} Discovery response object
+         * @param {Object}      options
+         * @param {string}      options.subscriptionId        This service subscription id
+         * @returns {Object} Subscription response object
          */
         function subscriptionResponse(opts) {
             opts = opts || {};

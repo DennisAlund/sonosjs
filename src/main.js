@@ -330,19 +330,7 @@ define(function (require) {
             /**
              * Register the controller for receiving push events from media devices.
              *
-             * The subscription message looks something like this
-             *
-             *      SUBSCRIBE /ZoneGroupTopology/Event HTTP/1.1
-             *      HOST: 192.168.1.63:1400
-             *      USER-AGENT: OS/version UPnP/1.1 product/version
-             *      CALLBACK: <http://192.168.1.12:3400/notify>
-             *      NT: upnp:event
-             *      TIMEOUT: Second-3600
-             *
-             * @param {Object}      options
-             * @param {string}      options.remoteIp        Remote IP
-             * @param {number}      options.remotePort      Remote port
-             * @param {number}      options.callbackPort    Local port that the event server is listening to
+             * @param {Object}  device  The device to register services for
              */
             function register(device) {
                 var httpServerSocketInfo = net.socket.httpServer.getSocketInfo(httpServerSocket);
