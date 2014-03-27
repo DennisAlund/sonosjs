@@ -25,12 +25,12 @@ define(function (require) {
         /**
          * Request to unsubscribe from receiving any more UPnP events from a media device
          *
-         * @param {Object}      options
-         * @param {string}      options.servicePath         Event path on which the TCP event server is responding to
-         * @param {string}      options.remoteIp            Remote IP
-         * @param {number}      options.remotePort          Remote port
-         * @param {string}      options.userAgent           If anything else than default (optional)
-         * @param {string}      options.subscriptionId      The id that was received upon registering the service
+         * @param {Object}      opts
+         * @param {string}      opts.servicePath         Event path on which the TCP event server is responding to
+         * @param {string}      opts.remoteIp            Remote IP
+         * @param {number}      opts.remotePort          Remote port
+         * @param {string}      opts.userAgent           If anything else than default (optional)
+         * @param {string}      opts.subscriptionId      The id that was received upon registering the service
          * @returns {Object} Subscription request
          */
         function unSubscriptionRequest(opts) {

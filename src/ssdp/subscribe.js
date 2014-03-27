@@ -26,13 +26,13 @@ define(function (require) {
         /**
          * Subscription request for receiving UPnP events from media devices
          *
-         * @param {Object}      options
-         * @param {string}      options.remoteIp        Remote IP
-         * @param {number}      options.remotePort      Remote port
-         * @param {string}      options.localIp         Local IP on which the TCP event server is listening
-         * @param {number}      options.localPort       Local port on which the TCP event server is listening
-         * @param {string}      options.servicePath     Event path on which the TCP event server is responding to
-         * @param {string}      options.userAgent       If anything else than default (optional)
+         * @param {Object}      opts
+         * @param {string}      opts.remoteIp        Remote IP
+         * @param {number}      opts.remotePort      Remote port
+         * @param {string}      opts.localIp         Local IP on which the TCP event server is listening
+         * @param {number}      opts.localPort       Local port on which the TCP event server is listening
+         * @param {string}      opts.servicePath     Event path on which the TCP event server is responding to
+         * @param {string}      opts.userAgent       If anything else than default (optional)
          * @returns {Object} Subscription request
          */
         function subscriptionRequest(opts) {
@@ -77,8 +77,8 @@ define(function (require) {
         /**
          * SSDP subscription response
          *
-         * @param {Object}      options
-         * @param {string}      options.subscriptionId        This service subscription id
+         * @param {Object}      opts
+         * @param {string}      opts.subscriptionId        This service subscription id
          * @returns {Object} Subscription response object
          */
         function subscriptionResponse(opts) {
@@ -96,19 +96,19 @@ define(function (require) {
         }
 
         /**
-         * Raw data parser into JSON formatted options for a subscriptionResponse object.
+         * Raw data parser into JSON formatted opts for a subscriptionResponse object.
          *
          * @param {string} data     SSDP header data
          * @returns {Object} SSDP subscriptionResponse object
          */
         subscriptionResponse.fromData = function (data) {
-            var options = shared.parseHeader(data);
+            var opts = shared.parseHeader(data);
 
-            if (options["REQUEST_HEADER"].search(/HTTP\/1.1\s+200\s+OK/i) !== 0) {
+            if (opts["REQUEST_HEADER"].search(/HTTP\/1.1\s+200\s+OK/i) !== 0) {
                 return null;
             }
 
-            var obj = subscriptionResponse(options);
+            var obj = subscriptionResponse(opts);
             return obj.isValid() ? obj : null;
         };
 
