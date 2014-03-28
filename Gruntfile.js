@@ -11,7 +11,7 @@ module.exports = function (grunt) {
     grunt.config.init({
         pkg: grunt.file.readJSON("package.json"),
         meta: {
-            libMain: "main", // Name of the file that exports the API
+            libMain: "sonosController", // Name of the file that exports the API
             outFile: "./dist/sonos.js"
         },
 

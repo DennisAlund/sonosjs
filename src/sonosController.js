@@ -28,24 +28,23 @@ define(function (require) {
         var ssdp = require("ssdp");
         var soap = require("soap");
         var models = require("models");
+        var upnpService = require("upnpService");
+        var deviceService = require("deviceService");
 
         // Refresh the device list after maximum five minutes
         var deviceMaxLifetime = 1000 * 60 * 5;
 
         /**
-         * The public API for Sonos service.
-         * There is only a single instance of the sonos service in the module.
+         * The public API for Sonos controller.
+         * There is only a single instance of the sonos controller in the module.
          *
-         * @returns {object} Sonos service
+         * @returns {object} Sonos controller
          */
-        function sonosService() {
+        function sonosController() {
             var that = {};
 
             var isServiceRunning = false;
             var multicastGroupSocket = 0;
-            var httpServerSocket = 0;
-            var httpServer;
-            var devices = {};
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
@@ -76,10 +75,10 @@ define(function (require) {
                     });
                 }
 
-                net.socket.httpServer.start(httpServerSocket);
+                upnpService.startEventServer();
 
                 // Just send out whatever we got to start with
-                event.trigger(event.action.DEVICES, getDevices());
+                event.trigger(event.action.DEVICES, deviceService.getDevices());
 
                 // Go wild with discovery at startup!
                 discover();
@@ -94,7 +93,8 @@ define(function (require) {
             that.stop = function () {
                 log.info("Stopping the Sonos UPnP controller");
                 isServiceRunning = false;
-                net.socket.httpServer.stop(httpServerSocket);
+                upnpService.stopEventServer();
+
                 net.socket.udp.close(multicastGroupSocket);
                 multicastGroupSocket = 0;
             };
@@ -105,7 +105,7 @@ define(function (require) {
              * @returns {object} Device data
              */
             that.getDevices = function () {
-                return getDevices();
+                return deviceService.getDevices();
             };
 
             /**
@@ -117,18 +117,16 @@ define(function (require) {
              */
             that.requestDeviceDetails = function (info) {
                 var location = null;
-                if (typeof(info) === "string") {
-                    if (devices.hasOwnProperty(info)) {
-                        location = devices[info].infoUrl;
-                    }
-                    else {
-                        location = info;
-                    }
+
+                var device = deviceService.getDevice({id: info});
+                if (device !== null) {
+                    location = device.infoUrl;
+                }
+                else {
+                    location = info;
                 }
 
-                if (location !== null) {
-                    requestDeviceDetails(location);
-                }
+                requestDeviceDetails(location);
             };
 
             /**
@@ -140,14 +138,12 @@ define(function (require) {
              * @param {string} deviceId     Id of the device to inquire
              */
             that.requestMediaState = function (deviceId) {
-                var device = null;
-                if (typeof(deviceId) === "string" && devices.hasOwnProperty(deviceId)) {
-                    device = devices[deviceId];
-                }
+                var device = deviceService.getDevice({id: deviceId});
                 log.debug("Requesting media state for device: %s", deviceId);
 
                 if (device === null) {
                     log.warning("No device in cache with id: %s", deviceId);
+                    return;
                 }
 
                 var soapRequest = soap.media.positionInfo();
@@ -171,37 +167,6 @@ define(function (require) {
             // ----------------------------------------------------------------
             // PRIVATE METHODS
 
-            function getDevices() {
-                var deviceList = [];
-                for (var deviceId in devices) {
-                    if (devices.hasOwnProperty(deviceId)) {
-                        deviceList.push(devices[deviceId]);
-                    }
-                }
-                return deviceList;
-            }
-
-
-            function removeDevice(deviceId) {
-                if (devices.hasOwnProperty(deviceId)) {
-                    unregister(devices[deviceId]);
-                    delete(devices[deviceId]);
-                    event.trigger(event.action.DEVICES, getDevices());
-                }
-            }
-
-            function addDevice(device) {
-                var isNew = !devices.hasOwnProperty(device.id);
-                devices[device.id] = device;
-                if (isNew) {
-                    log.debug("Added new device: %s", device.id);
-                    register(device);
-                    event.trigger(event.action.DEVICES, getDevices());
-                }
-                else {
-                    log.debug("Updating device: %s", device.id);
-                }
-            }
 
             /**
              * Clean up and refresh the device list cache
@@ -213,15 +178,12 @@ define(function (require) {
             function manageDeviceDecay() {
                 var referenceTime = Date.now() - deviceMaxLifetime;
 
-                for (var deviceId in devices) {
-                    if (devices.hasOwnProperty(deviceId)) {
-                        if (devices[deviceId].lastUpdated <= referenceTime) {
-                            var url = devices[deviceId].infoUrl;
-                            removeDevice(deviceId);
-                            requestDeviceDetails(url);
-                        }
+                deviceService.getDevices().forEach(function (device) {
+                    if (device.lastUpdated <= referenceTime) {
+                        deviceService.deviceService.removeDevice(device);
+                        requestDeviceDetails(device.infoUrl);
                     }
-                }
+                });
             }
 
             /**
@@ -241,7 +203,7 @@ define(function (require) {
                         device.ip = address[0];
                         device.port = address[1] || device.port;
 
-                        addDevice(device);
+                        deviceService.addDevice(device);
                     }
                 );
                 setTimeout(manageDeviceDecay, deviceMaxLifetime);
@@ -260,8 +222,8 @@ define(function (require) {
                     return;
                 }
 
-                // Discovery requests are usually sent in bursts. Multiple responses are expected.
-                if (!devices.hasOwnProperty(discoveryResponse.getId())) {
+                // Discovery requests are usually sent in bursts. Multiple responses are expected. Only fetch data once.
+                if (deviceService.getDevice({id: discoveryResponse.getId()}) === null) {
                     requestDeviceDetails(discoveryResponse.location);
                 }
             }
@@ -287,7 +249,7 @@ define(function (require) {
 
                 switch (notification.advertisement) {
                 case ssdp.advertisementType.goodbye:
-                    removeDevice(deviceId);
+                    deviceService.removeDevice(deviceId);
                     break;
                 case ssdp.advertisementType.alive:
                 case ssdp.advertisementType.update:
@@ -328,85 +290,6 @@ define(function (require) {
                 });
             }
 
-            /**
-             * Register the controller for receiving push events from media devices.
-             *
-             * @param {Object}  device  The device to register services for
-             */
-            function register(device) {
-                var httpServerSocketInfo = net.socket.httpServer.getSocketInfo(httpServerSocket);
-
-                device.services.forEach(function (servicePath) {
-                    var socketOptions = {
-                        remoteIp: device.ip,
-                        remotePort: device.port,
-                        timeout: 10,
-                        autoClose: true,
-                        consumer: function (info) {
-                            var subscriptionResponse = ssdp.subscribe.response.fromData(info.data);
-                            if (subscriptionResponse) {
-                                device.addServiceSubscriptionId(servicePath, subscriptionResponse.subscriptionId);
-                                log.debug("Registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
-                            }
-                        }
-                    };
-
-                    net.socket.tcp.open(socketOptions, function (socketInfo) {
-                        var subscriptionRequest = ssdp.subscribe.request({
-                            servicePath: servicePath,
-                            remoteIp: device.ip,
-                            remotePort: device.port,
-                            localIp: socketInfo.localIp,
-                            localPort: httpServerSocketInfo.port
-                        });
-
-                        net.socket.tcp.send(socketInfo.socketId, subscriptionRequest.toData());
-                    });
-                });
-            }
-
-
-            /**
-             * Un-register the controller from receiving any further push events from media devices.
-             *
-             * @param {Object}  device  The device to un-register services for
-             */
-            function unregister(device) {
-                device.services.forEach(function (servicePath) {
-                    var subscriptionId = device.getServiceSubscriptionId(servicePath);
-                    var socketOptions = {
-                        remoteIp: device.ip,
-                        remotePort: device.port,
-                        timeout: 10,
-                        autoClose: true,
-                        consumer: function () {
-                            log.debug("Unregistered event service '%s' with id '%s'", servicePath, subscriptionId);
-                        }
-                    };
-
-                    net.socket.tcp.open(socketOptions, function (socketInfo) {
-                        var subscriptionRequest = ssdp.unsubscribe.request({
-                            servicePath: servicePath,
-                            remoteIp: device.ip,
-                            remotePort: device.port,
-                            subscriptionId: subscriptionId
-                        });
-
-                        net.socket.tcp.send(socketInfo.socketId, subscriptionRequest.toData());
-                    });
-                });
-            }
-
-            // ----------------------------------------------------------------
-            // ----------------------------------------------------------------
-            // INITIALIZE THE SERVICE
-
-            (function init() {
-                httpServer = net.socket.httpServer.create({localPort: 1337}, function (socketInfo) {
-                    httpServerSocket = socketInfo.socketId;
-                });
-            }());
-
             return that;
         }
 
@@ -414,7 +297,7 @@ define(function (require) {
             VERSION: env.VERSION,
             event: event,
             models: models,
-            service: sonosService()
+            controller: sonosController()
         };
     }
 );
