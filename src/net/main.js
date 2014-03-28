@@ -20,7 +20,7 @@
 define(function (require) {
     "use strict";
 
-    var http = require("net/http");
+    var xhr = require("net/xhr");
     var socket = require("net/socket");
 
     function extractAddressFromUrl(url) {
@@ -29,8 +29,8 @@ define(function (require) {
 
     return {
         socket: socket,
-        http: http.http(),
-        soap: http.soap(),
+        http: xhr.http(),
+        soap: xhr.soap(),
         utils: {
             extractAddressFromUrl: extractAddressFromUrl
         }

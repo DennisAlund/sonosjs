@@ -27,11 +27,17 @@ define(function () {
 
             var httpStatus = "";
             var headers = {};
+            var httpStatusCode = 0;
 
             my.body = opts.body || "";
 
+            that.getCode = function () {
+                return httpStatusCode;
+            };
+
             that.setStatus = function (code, description) {
-                httpStatus = "HTTP/1.1 " + code + " " + description;
+                httpStatusCode = Number(code);
+                httpStatus = "HTTP/1.1 " + httpStatusCode + " " + description;
             };
 
             that.setContentType = function (contentType) {

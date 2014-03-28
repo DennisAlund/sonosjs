@@ -22,7 +22,8 @@ define(function (require) {
 
         var log = require("log");
         var convert = require("net/convert");
-        var httpResponse = require("net/httpResponse");
+        var httpResponse = require("net/http/response");
+        var httpRequest = require("net/http/request");
         var env = require("utils/environment");
 
         /**
@@ -117,8 +118,6 @@ define(function (require) {
                     if (info.bytesWritten < 0) {
                         log.error("Failed to send on socket '%d'.", socketId);
                     }
-
-                    log.debug("TCP socket %d onSend", socketId, info);
                 });
             };
 
@@ -128,7 +127,6 @@ define(function (require) {
 
             function onReceive(info) {
                 if (!socketRegistry.hasOwnProperty(info.socketId)) {
-                    that.close(info.socketId);
                     return;
                 }
 
@@ -145,8 +143,12 @@ define(function (require) {
             }
 
             function onReceiveError(info) {
-                log.warning("Got error code '%d' on TCP socket '%d'", info.resultCode, info.socketId);
-                that.close(info.socketId);
+                if (!socketRegistry.hasOwnProperty(info.socketId)) {
+                    return;
+                }
+
+                log.warning("Got error code '%d' on TCP socket '%d'. Closing.", info.resultCode, info.socketId);
+                chrome.sockets.tcp.close(info.socketId);
             }
 
 
@@ -155,6 +157,7 @@ define(function (require) {
             // INITIALIZE THE MODULE
 
             (function init() {
+                log.debug("Initializing Chrome TCP sockets module.");
                 chrome.sockets.tcp.onReceive.addListener(onReceive);
                 chrome.sockets.tcp.onReceiveError.addListener(onReceiveError);
             }());
@@ -240,8 +243,6 @@ define(function (require) {
                     if (info.bytesWritten < 0) {
                         log.error("Failed to send on UDP socket '%d'.", socketId);
                     }
-
-                    log.debug("UDP socket %d onSend", socketId, info);
                 });
             };
 
@@ -275,7 +276,6 @@ define(function (require) {
 
             function onReceive(info) {
                 if (!socketRegistry.hasOwnProperty(info.socketId)) {
-                    that.close(info.socketId);
                     return;
                 }
 
@@ -289,8 +289,12 @@ define(function (require) {
             }
 
             function onReceiveError(info) {
-                log.warning("Got error code '%d' on UDP socket '%d'", info.resultCode, info.socketId);
-                that.close(info.socketId);
+                if (!socketRegistry.hasOwnProperty(info.socketId)) {
+                    return;
+                }
+
+                log.warning("Got error code '%d' on UDP socket '%d'. Closing.", info.resultCode, info.socketId);
+                chrome.sockets.udp.close(info.socketId);
             }
 
 
@@ -299,6 +303,7 @@ define(function (require) {
             // INITIALIZE THE MODULE
 
             (function init() {
+                log.debug("Initializing Chrome UDP sockets module.");
                 chrome.sockets.udp.onReceive.addListener(onReceive);
                 chrome.sockets.udp.onReceiveError.addListener(onReceiveError);
             }());
@@ -306,10 +311,16 @@ define(function (require) {
             return that;
         }
 
+
+        /**
+         * A simple HTTP server
+         *
+         * @returns {Object}    HTTP server
+         */
         function httpServer() {
             var that = {};
             var serverSocketRegistry = {};
-            var clientSocketRegistry = {};
+            var httpRequests = {};
 
             /**
              * Create a HTTP server.
@@ -331,26 +342,23 @@ define(function (require) {
 
                 chrome.sockets.tcpServer.create(function (createInfo) {
                     var socketId = createInfo.socketId;
-                    chrome.sockets.tcpServer.setPaused(socketId, true, function () {
-                        chrome.sockets.tcpServer.listen(socketId, "0.0.0.0", port, function (result) {
-                            if (result < 0) {
-                                log.error("Failed to start HTTP server (socket: %d) on port: %d", socketId, port);
-                                return;
+                    chrome.sockets.tcpServer.listen(socketId, "0.0.0.0", port, function (result) {
+                        if (result < 0) {
+                            log.error("Failed to start HTTP server (socket: %d) on port: %d", socketId, port);
+                            return;
+                        }
+
+                        log.info("HTTP server with socket id '%d' created on port: %d", socketId, port);
+                        serverSocketRegistry[socketId] = {routes: {}};
+                        chrome.sockets.tcpServer.getInfo(socketId, function (socketInfo) {
+                            log.debug("http://localhost:%d", socketInfo.localPort);
+                            serverSocketRegistry[socketId].port = socketInfo.localPort;
+                            if (callback) {
+                                callback({
+                                    socketId: socketInfo.socketId,
+                                    localPort: socketInfo.localPort
+                                });
                             }
-
-                            log.info("HTTP server with socket id '%d' started on port: %d", socketId, port);
-                            serverSocketRegistry[socketId] = {routes: {}};
-
-                            chrome.sockets.tcpServer.getInfo(socketId, function (socketInfo) {
-                                log.debug("http://localhost:%d", socketInfo.localPort);
-                                serverSocketRegistry[socketId].port = socketInfo.localPort;
-                                if (callback) {
-                                    callback({
-                                        socketId: socketInfo.socketId,
-                                        localPort: socketInfo.localPort
-                                    });
-                                }
-                            });
                         });
                     });
                 });
@@ -447,41 +455,25 @@ define(function (require) {
             // ----------------------------------------------------------------
             // PRIVATE METHODS
 
-            function extractPathFromHttpHeaders(headers) {
-                var firstLine = headers.split("\r\n")[0] || "";
-                var path = firstLine.match(/\w+\s+(.*)\sHTTP\/1\.1/i);
 
-                return path.length === 2 ? path[1] : "/";
-            }
-
-            function debugStoreRequest(path, data) {
-                log.debug("======== INCOMING HTTP REQUEST: %s", path, data);
-                chrome.storage.local.get("routeData", function (items) {
-                    items["routeData"] = items["routeData"] || {};
-                    if (!items["routeData"].hasOwnProperty(path)) {
-                        items["routeData"][path] = [];
-                    }
-                    items["routeData"][path].push(data);
-
-                    chrome.storage.local.set(items);
-                });
-            }
-
-            function getServerSocket(clientSocket) {
-                if (!clientSocketRegistry.hasOwnProperty(clientSocket)) {
-                    chrome.sockets.tcp.close(clientSocket);
-                    return 0;
-                }
-
-                return clientSocketRegistry[clientSocket];
-            }
-
+            /**
+             * Remove any cache and associations with a client socket. Will also try to close the client socket.
+             *
+             * @param {number}  clientSocket    Client socket id
+             */
             function removeClientConnection(clientSocket) {
-                log.debug("HTTP server is closing connection with client socket '%d'", clientSocket);
                 chrome.sockets.tcp.close(clientSocket);
-                if (clientSocketRegistry.hasOwnProperty(clientSocket)) {
-                    delete (clientSocketRegistry[clientSocket]);
+                if (httpRequests.hasOwnProperty(clientSocket)) {
+                    var serverSocketId = httpRequests[clientSocket].serverSocketId;
+                    log.debug("HTTP server '%d' is closing connection to client '%d'", serverSocketId, clientSocket);
+                    delete (httpRequests[clientSocket]);
                 }
+            }
+
+            function isRouteDefined(request) {
+                var routes = serverSocketRegistry[request.serverSocketId].routes;
+                var requestPath = request.getRequestPath();
+                return routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function";
             }
 
             // ----------------------------------------------------------------
@@ -490,31 +482,36 @@ define(function (require) {
 
             function onReceive(info) {
                 var clientSocket = info.socketId;
-                var serverSocket = getServerSocket(clientSocket);
+
+                if (!httpRequests.hasOwnProperty(clientSocket)) {
+                    return;
+                }
+
+                var serverSocket = httpRequests[clientSocket].serverSocketId;
                 if (!serverSocketRegistry.hasOwnProperty(serverSocket)) {
                     chrome.sockets.tcpServer.close(serverSocket);
                     return;
                 }
 
-                var routes = serverSocketRegistry[serverSocket].routes;
-                var data = convert.fromBuffer(info.data);
-                var dataParts = data.split("\r\n\r\n");
-                var httpRequest = {
-                    headers: dataParts.shift(),
-                    body: dataParts.join("\r\n\r\n")
-                };
-                var requestPath = extractPathFromHttpHeaders(httpRequest.headers);
+                var request = httpRequests[clientSocket];
+                request.addData(convert.fromBuffer(info.data));
 
-                debugStoreRequest(requestPath, data);
+                if (!request.isComplete()) {
+                    // Stop here this time, wait for more data on socket
+                    return;
+                }
 
                 var response;
-                if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
+                if (isRouteDefined(request)) {
+                    var routes = serverSocketRegistry[request.serverSocketId].routes;
                     response = httpResponse.http200({
-                        body: routes[requestPath](httpRequest)
+                        body: routes[request.getRequestPath()](httpRequest)
                     });
                 }
 
                 else {
+                    log.warning("HTTP server '%d' does has not registered: %s", serverSocket, request.getRequestPath());
+                    log.debug(request.getBody());
                     response = httpResponse.http404();
                 }
 
@@ -522,6 +519,8 @@ define(function (require) {
                     if (info.resultCode < 0) {
                         log.warning("Failed to send HTTP response.");
                     }
+
+                    log.debug("HTTP server '%d' => HTTP%d to client '%d'", serverSocket, response.getCode(), clientSocket);
                     removeClientConnection(clientSocket);
                 });
             }
@@ -529,6 +528,11 @@ define(function (require) {
             function onReceiveError(info) {
                 var socketId = info.socketId;
                 var code = info.resultCode;
+
+                if (!httpRequests.hasOwnProperty(socketId)) {
+                    return;
+                }
+
                 log.warning("HTTP server got error code '%d' on client socket '%d'. Closing.", code, socketId);
                 removeClientConnection(socketId);
             }
@@ -537,18 +541,19 @@ define(function (require) {
                 var clientSocket = info.clientSocketId;
                 var serverSocket = info.socketId;
 
-                clientSocketRegistry[clientSocket] = serverSocket;
-                chrome.sockets.tcp.setPaused(clientSocket, false);
-
                 chrome.sockets.tcp.getInfo(clientSocket, function (socketInfo) {
                     var ip = socketInfo.peerAddress;
-                    var port = socketInfo.peerPort;
-                    log.debug("HTTP server (socket: %d) got connection from (%s:%d)", serverSocket, ip, port);
+                    log.debug("HTTP server '%d' got connection from %s on socket '%d'", serverSocket, ip, clientSocket);
+                    httpRequests[clientSocket] = httpRequest({
+                        serverSocketId: serverSocket,
+                        remoteIp: ip
+                    });
+                    chrome.sockets.tcp.setPaused(clientSocket, false);
                 });
             }
 
             function onAcceptError(info) {
-                log.error("HTTP server (socket: %d) got error code '%d' and is now paused.", info.socketId, info.resultCode);
+                log.error("HTTP server '%d' got error code '%d' and is now paused.", info.socketId, info.resultCode);
             }
 
 
@@ -557,6 +562,7 @@ define(function (require) {
             // INITIALIZE THE MODULE
 
             (function init() {
+                log.debug("Initializing Chrome HTTP Server module.");
                 chrome.sockets.tcp.onReceive.addListener(onReceive);
                 chrome.sockets.tcp.onReceiveError.addListener(onReceiveError);
                 chrome.sockets.tcpServer.onAccept.addListener(onAccept);
@@ -566,6 +572,11 @@ define(function (require) {
             return that;
         }
 
+        /**
+         * This is the actual module that is exposed and contains all Chrome specific networking types and API
+         *
+         * @returns {Object}    Chrome networking module
+         */
         function chromeNetworkingModule() {
             var that = {};
             var isSupported = false;
@@ -585,6 +596,7 @@ define(function (require) {
             (function init() {
                 isSupported = (chrome && chrome.sockets) ? true : false;
                 if (!isSupported) {
+                    log.info("Chrome networking is not supported.");
                     return;
                 }
 
