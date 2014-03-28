@@ -40,6 +40,19 @@ module.exports = function (grunt) {
                     }
                 ]
             },
+            logs: {
+                src: ["<%=meta.outFile%>"],
+                overwrite: true,
+                replacements: [
+                    {
+                        // Remove console logs... and due to regexp you're not allowed to use semi-colon in the log text
+                        from: /console.(debug|log)\([^;]*\);/gm,
+                        to: function () {
+                            return "// Console log removed";
+                        }
+                    }
+                ]
+            },
             optimizations: {
                 src: ["<%=meta.outFile%>"],
                 overwrite: true,

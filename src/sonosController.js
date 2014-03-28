@@ -21,7 +21,6 @@ define(function (require) {
         "use strict";
 
         require("sugar");
-        var log = require("log");
         var env = require("utils/environment");
         var event = require("utils/event");
         var net = require("net");
@@ -56,11 +55,11 @@ define(function (require) {
              */
             that.start = function () {
                 if (!net.socket.isSupported()) {
-                    log.error("No socket support. Can not run Sonos controller.");
+                    console.error("No socket support. Can not run Sonos controller.");
                     return;
                 }
 
-                log.info("Starting the Sonos UPnP controller");
+                console.log("Starting the Sonos UPnP controller");
                 isServiceRunning = true;
 
                 if (multicastGroupSocket === 0) {
@@ -91,7 +90,7 @@ define(function (require) {
              * Leave the SSDP multicast group.
              */
             that.stop = function () {
-                log.info("Stopping the Sonos UPnP controller");
+                console.log("Stopping the Sonos UPnP controller");
                 isServiceRunning = false;
                 upnpService.stopEventServer();
 
@@ -139,10 +138,10 @@ define(function (require) {
              */
             that.requestMediaState = function (deviceId) {
                 var device = deviceService.getDevice({id: deviceId});
-                log.debug("Requesting media state for device: %s", deviceId);
+                console.debug("Requesting media state for device: %s", deviceId);
 
                 if (device === null) {
-                    log.warning("No device in cache with id: %s", deviceId);
+                    console.warn("No device in cache with id: %s", deviceId);
                     return;
                 }
 
@@ -157,7 +156,7 @@ define(function (require) {
                             event.trigger(event.action.MEDIA_INFO, mediaInfo);
                         }
                         else {
-                            log.error("Had problems to parse media info XML.", xml);
+                            console.error("Had problems to parse media info XML.", xml);
                         }
                     }
                 );
@@ -192,7 +191,7 @@ define(function (require) {
              *  @param location
              */
             function requestDeviceDetails(location) {
-                log.debug("Making device details request for: %s", location);
+                console.debug("Making device details request for: %s", location);
                 net.http.get(
                     location,
                     function xhrCallback(xml) {
@@ -243,7 +242,7 @@ define(function (require) {
                     return;
                 }
 
-                log.debug("Got a notification message: %s", notification.advertisement);
+                console.debug("Got a notification message: %s", notification.advertisement);
 
                 var deviceId = notification.getId();
 
@@ -256,7 +255,7 @@ define(function (require) {
                     requestDeviceDetails(notification.location);
                     break;
                 default:
-                    log.error("Unknown advertisement type '%s'", notification.advertisement);
+                    console.error("Unknown advertisement type '%s'", notification.advertisement);
                 }
             }
 
@@ -266,7 +265,7 @@ define(function (require) {
              * TODO: Send it periodically according to CACHE-CONTROL max age spec
              */
             function discover() {
-                log.info("Sending discovery on Sonos UPnP controller");
+                console.debug("Sending discovery on Sonos UPnP controller");
 
                 // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
                 // Keeping socket open for some time to see if anything is stumbling in
@@ -279,7 +278,7 @@ define(function (require) {
                     var data = discoveryMessage.toData();
                     [0, 1, 2, 3].forEach(function (time) {
                         setTimeout(function () {
-                            log.debug("Sending discovery request %d", time);
+                            console.debug("Sending discovery request %d", time);
                             net.socket.udp.send(socketInfo.socketId, data, "239.255.255.250", 1900);
                         }, time * 1000);
                     });

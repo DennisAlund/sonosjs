@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        var log = require("log");
         var net = require("net");
         var ssdp = require("ssdp");
 
@@ -56,7 +55,7 @@ define(function (require) {
                             var subscriptionResponse = ssdp.subscribe.response.fromData(info.data);
                             if (subscriptionResponse) {
                                 device.addServiceSubscriptionId(servicePath, subscriptionResponse.subscriptionId);
-                                log.debug("Registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
+                                console.debug("Registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
                             }
                         }
                     };
@@ -89,7 +88,7 @@ define(function (require) {
                         timeout: 10,
                         autoClose: true,
                         consumer: function () {
-                            log.debug("Unregistered event service '%s' with id '%s'", servicePath, subscriptionId);
+                            console.debug("Unregistered event service '%s' with id '%s'", servicePath, subscriptionId);
                         }
                     };
 
@@ -120,7 +119,7 @@ define(function (require) {
 
 
         (function init() {
-            log.debug("Initializing upnpService");
+            console.debug("Initializing upnpService");
             service = upnpService();
         }());
 

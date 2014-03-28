@@ -17,11 +17,8 @@
  *
  * ------------------------------------------------------------------------- */
 
-define(function (require) {
+define(function () {
         "use strict";
-
-        var log = require("log");
-
 
         function eventManager() {
             var that = {};
@@ -47,7 +44,7 @@ define(function (require) {
                     eventCallbacks[event].push(callback);
                 }
                 else {
-                    log.warning("Event type '%s' is not supported.", event);
+                    console.warn("Event type '%s' is not supported.", event);
                 }
             };
 

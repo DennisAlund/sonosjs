@@ -17,10 +17,8 @@
  *
  * ------------------------------------------------------------------------- */
 
-define(function (require) {
+define(function () {
         "use strict";
-
-        var log = require("log");
 
         var advertisementType = {
             search: "ssdp:discover",
@@ -71,7 +69,7 @@ define(function (require) {
                     opts.port = hostParts[1].toNumber();
                 }
                 else {
-                    log.error("Bad address format: {1}".assign(value));
+                    console.error("Bad address format: {1}".assign(value));
                 }
                 break;
             case "CACHE-CONTROL":

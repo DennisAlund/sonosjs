@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        var log = require("log");
         var upnpService = require("upnpService");
         var event = require("utils/event");
 
@@ -74,13 +73,13 @@ define(function (require) {
                 var deviceIndex = findDeviceIndex("id", device.id);
 
                 if (deviceIndex < 0) {
-                    log.debug("Added new device: %s", device.id);
+                    console.debug("Added new device: %s", device.id);
                     devices.push(device);
                     upnpService.register(device);
                     event.trigger(event.action.DEVICES, devices.slice());
                 }
                 else {
-                    log.debug("Updating device: %s", device.id);
+                    console.debug("Updating device: %s", device.id);
                     devices[deviceIndex] = device;
                 }
             };
@@ -99,7 +98,7 @@ define(function (require) {
         }
 
         (function init() {
-            log.debug("Initializing deviceService");
+            console.debug("Initializing deviceService");
             service = deviceService();
         }());
 

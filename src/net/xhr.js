@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        var log = require("log");
         var convert = require("net/convert");
 
         function http() {
@@ -96,17 +95,17 @@ define(function (require) {
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     if (callback) {
-                        log.debug("Got response on request: %s", url);
+                        console.debug("Got response on request: %s", url);
                         callback(xhr[xhrResponseProperty]);
                     }
                 }
 
                 else if (xhr.status !== 200) {
-                    log.error("Got status code 'HTTP %d' from %s", xhr.status, url);
+                    console.error("Got status code 'HTTP %d' from %s", xhr.status, url);
                 }
             };
 
-            log.debug("Making XHR request: %s", url);
+            console.debug("Making XHR request: %s", url);
 
             if (body === null) {
                 xhr.send();

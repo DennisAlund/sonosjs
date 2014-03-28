@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        var log = require("log");
         var chrome = require("net/environments/chrome");
 
         var socketModule = {
@@ -30,11 +29,11 @@ define(function (require) {
         };
 
         if (chrome.isSupported()) {
-            log.info("Found socket support for chrome.");
+            console.log("Found socket support for chrome.");
             socketModule = chrome;
         }
         else {
-            log.warning("Didn't find any suitable module for socket support.");
+            console.warn("Didn't find any suitable module for socket support.");
         }
 
         return socketModule;

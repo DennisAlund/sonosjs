@@ -1,9 +1,7 @@
-define(function (require) {
+define(function () {
         "use strict";
 
-        var log = require("log");
-
-        log.info("Using dummy networking!");
+        console.log("Using dummy networking!");
 
         function udpSocket() {
             var that = {};

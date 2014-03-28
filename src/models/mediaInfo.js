@@ -21,7 +21,6 @@ define(function (require) {
         "use strict";
 
         var xmlParser = require("utils/xml");
-        var log = require("log");
 
         var mediaInfoTypes = {
             UNKNOWN: "MEDIA_TYPE_UNKNOWN",
@@ -149,7 +148,7 @@ define(function (require) {
                 return mediaInfoTypes.RADIO_STATION;
 
             default:
-                log.warning("Unsupported media type '%s' from URI: %s", trackIdentifier, uri);
+                console.warn("Unsupported media type '%s' from URI: %s", trackIdentifier, uri);
             }
 
             return mediaInfoTypes.UNKNOWN;
