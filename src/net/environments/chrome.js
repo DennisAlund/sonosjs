@@ -602,7 +602,7 @@ define(function (require) {
                 }
 
                 if (navigator && navigator.userAgent) {
-                    env.USER_AGENT = env.USER_AGENT.assign(navigator.userAgent);
+                    env.USER_AGENT = navigator.userAgent + " " + env.USER_AGENT;
                 }
 
                 that.tcp = tcp();

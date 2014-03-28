@@ -39,7 +39,7 @@ define(function (require) {
             that.userAgent = opts.userAgent || env.USER_AGENT;
 
             that.isValid = function () {
-                return Object.keys(that).all(function (key) {
+                return Object.keys(that).every(function (key) {
                     return that[key] ? true : false;
                 });
             };
@@ -61,7 +61,7 @@ define(function (require) {
                 return [
                     "M-SEARCH * HTTP/1.1",
                     "HOST: 239.255.255.250:1900",
-                    "MAN: \"{1}\"".assign(shared.advertisementType.search),
+                    "MAN: \"" + shared.advertisementType.search + "\"",
                     "MX: " + that.maxWaitTime,
                     "ST: " + that.targetScope,
                     "USER-AGENT: " + that.userAgent,

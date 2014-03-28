@@ -124,8 +124,7 @@ module.exports = function (grunt) {
                 optimize: buildOptions.debug ? "none" : "uglify2",
                 paths: {
                     almond: "../lib/almond/almond",
-                    log: "./utils/log",
-                    sugar: "../lib/sugar/release/sugar.min"
+                    log: "./utils/log"
                 },
                 packages: ["models", "net", "soap", "ssdp"],
                 logLevel: 0,

@@ -64,7 +64,7 @@ define(function (require) {
                     return false;
                 }
 
-                return Object.keys(that).all(function (key) {
+                return Object.keys(that).every(function (key) {
                     if (key === "searchPort") {
                         return true;
                     }

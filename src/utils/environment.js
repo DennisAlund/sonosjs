@@ -36,7 +36,7 @@ define(function () {
             DEBUG: isOption("%%DEBUG%%"),
             LOG_LEVELS: {OFF: 0, ERROR: 1, WARNING: 2, INFO: 4, TRACE: 8, DEBUG: 16},
             LOG_LEVEL: isOption("%%DEBUG%%") ? (16 | 4 | 2 | 1) : 1,
-            USER_AGENT: "{1} UPnP/1.1 %%APP_NAME%%/%%VERSION%%",
+            USER_AGENT: "UPnP/1.1 %%APP_NAME%%/%%VERSION%%",
             VERSION: "%%VERSION%%"
         };
     }

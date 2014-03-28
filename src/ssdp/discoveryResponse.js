@@ -43,7 +43,7 @@ define(function (require) {
 
 
             that.isValid = function () {
-                return Object.keys(that).all(function (key) {
+                return Object.keys(that).every(function (key) {
                     if (key === "searchPort" || key === "date") {
                         return true;
                     }

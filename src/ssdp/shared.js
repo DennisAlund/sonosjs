@@ -58,22 +58,23 @@ define(function () {
             }
 
             var keyEnd = line.indexOf(":");
-            var key = line.to(keyEnd).toUpperCase();
-            var value = line.from(keyEnd + 1).trim();
+            var key = line.substr(0, keyEnd).toUpperCase();
+            var value = line.substr(keyEnd + 1).trim();
 
             switch (key) {
             case "HOST":
                 var hostParts = value.split(":");
                 if (hostParts.length === 2) {
                     opts.ip = hostParts[0];
-                    opts.port = hostParts[1].toNumber();
+                    opts.port = Number(hostParts[1]);
                 }
                 else {
-                    console.error("Bad address format: {1}".assign(value));
+                    console.error("Bad address format: %s", value);
                 }
                 break;
             case "CACHE-CONTROL":
-                opts.keepAlive = value.words().last().toNumber();
+                var keepAlive = value.substr(value.lastIndexOf(" ")).trim();
+                opts.keepAlive = Number(keepAlive);
                 break;
             case "DATE":
                 var date = new Date(value);
@@ -91,7 +92,7 @@ define(function () {
                 opts.advertisement = value.replace(/"/g, "");
                 break;
             case "MX":
-                opts.maxWaitTime = value.toNumber();
+                opts.maxWaitTime = Number(value);
                 break;
             case "USN":
                 opts.uniqueServiceName = value;
@@ -102,10 +103,10 @@ define(function () {
                 break;
             case "X-RINCON-BOOTSEQ": // Sonos specific
             case "BOOTID.UPNP.ORG":
-                opts.bootId = value.toNumber();
+                opts.bootId = Number(value);
                 break;
             case "NEXTBOOTID.UPNP.ORG":
-                opts.nextBootId = value.toNumber();
+                opts.nextBootId = Number(value);
                 break;
             case "X-RINCON-HOUSEHOLD":
                 opts.householdToken = value;
@@ -139,12 +140,12 @@ define(function () {
             var headerOpts = {};
             var headerEnd = data.search(/^\n+$/m); // Header ends with a single empty line
             if (headerEnd >= 0) {
-                data = data.to(headerEnd);
+                data = data.substr(0, headerEnd);
             }
 
-            data.lines(function (line, num) {
+            data.split("\n").forEach(function (line, num) {
                 line = line.trim();
-                if (num === 0 && line.has("HTTP/1.1")) {
+                if (num === 0 && line.indexOf("HTTP/1.1") >= 0) {
                     headerOpts["REQUEST_HEADER"] = line;
                 }
 

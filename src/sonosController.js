@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        require("sugar");
         var env = require("utils/environment");
         var event = require("utils/event");
         var net = require("net");
