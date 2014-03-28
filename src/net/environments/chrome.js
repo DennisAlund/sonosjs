@@ -429,7 +429,8 @@ define(function (require) {
              * @param {function}    callback    Callback method for handling requests
              */
             that.addRoute = function (socketId, route, callback) {
-                if (serverSocketRegistry[socketId].hasOwnProperty(socketId)) {
+                console.debug("HTTP server '%d' register route: %s", socketId, route);
+                if (serverSocketRegistry.hasOwnProperty(socketId)) {
                     serverSocketRegistry[socketId].routes[route] = callback;
                 }
             };
@@ -441,9 +442,10 @@ define(function (require) {
              * @param {string}      route       A resource path
              */
             that.removeRoute = function (socketId, route) {
-                if (!route || !serverSocketRegistry[socketId].hasOwnProperty(socketId)) {
+                if (!route || !serverSocketRegistry.hasOwnProperty(socketId)) {
                     return;
                 }
+                console.debug("HTTP server '%d' remove route: %s", socketId, route);
 
                 if (serverSocketRegistry[socketId].routes.hasOwnProperty(route)) {
                     delete(serverSocketRegistry[socketId].routes[route]);
@@ -504,7 +506,7 @@ define(function (require) {
                 if (isRouteDefined(request)) {
                     var routes = serverSocketRegistry[request.serverSocketId].routes;
                     response = httpResponse.http200({
-                        body: routes[request.getRequestPath()](httpRequest)
+                        body: routes[request.getRequestPath()](request)
                     });
                 }
 
