@@ -151,8 +151,10 @@ define(function (require) {
                     function soapMediaInfoCallback(xml) {
                         models.mediaInfo.fromXml(xml, function (mediaInfo) {
                             if (mediaInfo) {
-                                mediaInfo = device;
-                                event.trigger(event.action.MEDIA_INFO, mediaInfo);
+                                event.trigger(event.action.MEDIA_INFO, {
+                                    device: device,
+                                    data: mediaInfo
+                                });
                             }
                             else {
                                 console.error("Had problems to parse media info XML.", xml);

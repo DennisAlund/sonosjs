@@ -47,7 +47,6 @@ define(function (require) {
             that.mediaType = opts.mediaType;
             that.metaData = opts.metaData;
             that.playQueueNumber = opts.playQueueNumber;
-            that.device = null;
 
             return that;
         }
