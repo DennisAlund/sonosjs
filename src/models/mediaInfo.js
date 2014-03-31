@@ -55,11 +55,12 @@ define(function (require) {
         mediaInfo.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {
+                var queryBase = "/Envelope/Body/GetPositionInfoResponse/";
                 var opts = {
-                    playQueueNumber: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/Track")[0].text,
-                    duration: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackDuration")[0].text,
-                    uri: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackURI")[0].text,
-                    currentTime: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/RelTime")[0].text
+                    playQueueNumber: xmlParser.query(queryBase + "Track")[0].text,
+                    duration: xmlParser.query(queryBase + "TrackDuration")[0].text,
+                    uri: xmlParser.query(queryBase + "TrackURI")[0].text,
+                    currentTime: xmlParser.query(queryBase + "RelTime")[0].text
                 };
 
                 var subCallback = function metaDataCallback(metaData) {
@@ -67,7 +68,7 @@ define(function (require) {
                     callback(mediaInfo(opts));
                 };
 
-                var metaDataXml = xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackMetaData")[0].text;
+                var metaDataXml = xmlParser.query(queryBase + "TrackMetaData")[0].text;
                 var uri = opts.uri.toLowerCase();
                 if (uri.toLowerCase().indexOf("x-file-cifs") >= 0) {
                     musicFileMetaData.fromXml(metaDataXml, subCallback);
@@ -100,12 +101,13 @@ define(function (require) {
         musicFileMetaData.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {
+                var queryBase = "/DIDL-Lite/item/";
                 var opts = {
-                    upnpClass: xmlParser.query("/DIDL-Lite/item/upnp:class")[0].text,
-                    albumArtUri: xmlParser.query("/DIDL-Lite/item/upnp:albumArtURI")[0].text,
-                    title: xmlParser.query("/DIDL-Lite/item/dc:title")[0].text,
-                    artist: xmlParser.query("/DIDL-Lite/item/dc:creator")[0].text,
-                    album: xmlParser.query("/DIDL-Lite/item/upnp:album")[0].text
+                    upnpClass: xmlParser.query(queryBase + "class")[0].text,
+                    albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
+                    title: xmlParser.query(queryBase + "title")[0].text,
+                    artist: xmlParser.query(queryBase + "creator")[0].text,
+                    album: xmlParser.query(queryBase + "album")[0].text
                 };
 
                 callback(musicFileMetaData(opts));
@@ -124,12 +126,13 @@ define(function (require) {
         radioMetaData.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {
+                var queryBase = "/DIDL-Lite/item/";
                 var opts = {
-                    upnpClass: xmlParser.query("/DIDL-Lite/item/upnp:class")[0].text,
-                    albumArtUri: xmlParser.query("/DIDL-Lite/item/upnp:albumArtURI")[0].text,
-                    title: xmlParser.query("/DIDL-Lite/item/dc:title")[0].text,
-                    artist: xmlParser.query("/DIDL-Lite/item/dc:creator")[0].text,
-                    album: xmlParser.query("/DIDL-Lite/item/upnp:album")[0].text
+                    upnpClass: xmlParser.query(queryBase + "class")[0].text,
+                    albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
+                    title: xmlParser.query(queryBase + "title")[0].text,
+                    artist: xmlParser.query(queryBase + "creator")[0].text,
+                    album: xmlParser.query(queryBase + "album")[0].text
                 };
 
                 callback(radioMetaData(opts));
