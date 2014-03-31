@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var xmlParser = require("utils/xml");
+        var xml = require("utils/xml");
 
         var mediaInfoTypes = {
             UNKNOWN: "MEDIA_TYPE_UNKNOWN",
@@ -49,28 +49,37 @@ define(function (require) {
             that.playQueueNumber = opts.playQueueNumber;
             that.device = null;
 
-            that.setDevice = function (device) {
-                that.device = device;
-            };
-
             return that;
         }
 
-        mediaInfo.fromXml = function (xml) {
-            var xmlDocument = xmlParser.document(xml);
-            var mediaType = deductMediaType(xmlDocument);
-            var metaData = metaDataForMediaType(mediaType, xmlDocument);
+        mediaInfo.fromXml = function (xmlString, callback) {
+            var xmlParser = xml.parser();
+            xmlParser.parse(xmlString, function () {
+                var opts = {
+                    playQueueNumber: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/Track")[0].text,
+                    duration: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackDuration")[0].text,
+                    uri: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackURI")[0].text,
+                    currentTime: xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/RelTime")[0].text
+                };
 
-            var opts = {
-                playQueueNumber: xmlDocument.getValue("Track"),
-                duration: xmlDocument.getValue("TrackDuration"),
-                uri: xmlDocument.getValue("TrackURI"),
-                currentTime: xmlDocument.getValue("RelTime"),
-                mediaType: mediaType,
-                metaData: metaData
-            };
+                var subCallback = function metaDataCallback(metaData) {
+                    opts.metaData = metaData;
+                    callback(mediaInfo(opts));
+                };
 
-            return mediaInfo(opts);
+                var metaDataXml = xmlParser.query("s:Envelope/s:Body/u:GetPositionInfoResponse/TrackMetaData")[0].text;
+                var uri = opts.uri.toLowerCase();
+                if (uri.toLowerCase().indexOf("x-file-cifs") >= 0) {
+                    musicFileMetaData.fromXml(metaDataXml, subCallback);
+                }
+                else if (uri.indexOf("x-rincon-mp3radio") >= 0) {
+                    radioMetaData.fromXml(metaDataXml, subCallback);
+                }
+                else {
+                    console.warn("Not know media type in URI: %s", opts.uri);
+                    subCallback(null);
+                }
+            });
         };
 
 
@@ -83,77 +92,49 @@ define(function (require) {
             opts = opts || {};
 
             var that = opts;
+            that.type = mediaInfoTypes.MUSIC_FILE;
 
             return that;
         }
 
-        musicFileMetaData.fromXml = function (xml) {
-            var xmlDocument = xmlParser.document(xml);
+        musicFileMetaData.fromXml = function (xmlString, callback) {
+            var xmlParser = xml.parser();
+            xmlParser.parse(xmlString, function () {
+                var opts = {
+                    upnpClass: xmlParser.query("/DIDL-Lite/item/upnp:class")[0].text,
+                    albumArtUri: xmlParser.query("/DIDL-Lite/item/upnp:albumArtURI")[0].text,
+                    title: xmlParser.query("/DIDL-Lite/item/dc:title")[0].text,
+                    artist: xmlParser.query("/DIDL-Lite/item/dc:creator")[0].text,
+                    album: xmlParser.query("/DIDL-Lite/item/upnp:album")[0].text
+                };
 
-            var opts = {
-                upnpClass: xmlDocument.getValue("upnp:class"),
-                albumArtUri: xmlDocument.getValue("upnp:albumArtURI"),
-                title: xmlDocument.getValue("dc:title"),
-                artist: xmlDocument.getValue("dc:creator"),
-                album: xmlDocument.getValue("upnp:album")
-            };
-
-            return musicFileMetaData(opts);
+                callback(musicFileMetaData(opts));
+            });
         };
 
         function radioMetaData(opts) {
             opts = opts || {};
 
             var that = opts;
+            that.type = mediaInfoTypes.RADIO_STATION;
 
             return that;
         }
 
-        radioMetaData.fromXml = function (xml) {
-            var xmlDocument = xmlParser.document(xml);
+        radioMetaData.fromXml = function (xmlString, callback) {
+            var xmlParser = xml.parser();
+            xmlParser.parse(xmlString, function () {
+                var opts = {
+                    upnpClass: xmlParser.query("/DIDL-Lite/item/upnp:class")[0].text,
+                    albumArtUri: xmlParser.query("/DIDL-Lite/item/upnp:albumArtURI")[0].text,
+                    title: xmlParser.query("/DIDL-Lite/item/dc:title")[0].text,
+                    artist: xmlParser.query("/DIDL-Lite/item/dc:creator")[0].text,
+                    album: xmlParser.query("/DIDL-Lite/item/upnp:album")[0].text
+                };
 
-            var opts = {
-                upnpClass: xmlDocument.getValue("upnp:class"),
-                albumArtUri: xmlDocument.getValue("upnp:albumArtURI"),
-                title: xmlDocument.getValue("dc:title"),
-                artist: xmlDocument.getValue("dc:creator"),
-                album: xmlDocument.getValue("upnp:album")
-            };
-
-            return radioMetaData(opts);
+                callback(radioMetaData(opts));
+            });
         };
-
-
-        function metaDataForMediaType(mediaType, xmlDocument) {
-            var metaDataXml = decodeURI(xmlDocument.getValue("TrackMetaData") || "");
-            switch (mediaType) {
-            case mediaInfoTypes.MUSIC_FILE:
-                return musicFileMetaData.fromXml(metaDataXml);
-
-            case mediaInfoTypes.RADIO_STATION:
-                return radioMetaData.fromXml(metaDataXml);
-            }
-
-            return null;
-        }
-
-        function deductMediaType(xmlDocument) {
-            var uri = xmlDocument.getValue("TrackURI");
-            var trackIdentifier = uri.substring(0, uri.indexOf("://"));
-            switch (trackIdentifier.toLowerCase()) {
-            case "x-file-cifs":
-                return mediaInfoTypes.MUSIC_FILE;
-
-            case "x-rincon-mp3radio":
-                return mediaInfoTypes.RADIO_STATION;
-
-            default:
-                console.warn("Unsupported media type '%s' from URI: %s", trackIdentifier, uri);
-            }
-
-            return mediaInfoTypes.UNKNOWN;
-        }
-
 
         return mediaInfo;
     }

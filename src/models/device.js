@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var xmlParser = require("utils/xml");
+        var xml = require("utils/xml");
 
         function device(opts) {
             opts = opts || {};
@@ -29,17 +29,14 @@ define(function (require) {
             var registeredServices = {};
 
             that.id = opts.id;
-            that.displayName = opts.displayName;
-            that.speakerSize = opts.speakerSize;
             that.deviceType = opts.deviceType;
+            that.speakerSize = opts.speakerSize;
             that.groupName = opts.groupName;
             that.services = opts.services ? opts.services.slice() : [];
-            that.icons = opts.icons ? opts.icons.slice() : [];
             that.ip = null;
             that.port = 1400;
             that.lastUpdated = Date.now();
             that.infoUrl = null; // Full URL to the service
-
 
             that.addServiceSubscriptionId = function (service, serviceId) {
                 registeredServices[service] = serviceId;
@@ -59,19 +56,21 @@ define(function (require) {
             return that;
         }
 
-        device.fromXml = function (xml) {
-            var xmlDocument = xmlParser.document(xml);
-            var opts = {
-                id: xmlDocument.getValue("UDN"),
-                displayName: xmlDocument.getValue("displayName"),
-                speakerSize: xmlDocument.getValue("internalSpeakerSize"),
-                services: xmlDocument.getValueList("serviceList.eventSubURL"),
-                deviceType: xmlDocument.getValue("deviceType"),
-                icons: xmlDocument.getValueList("iconList.url"),
-                groupName: xmlDocument.getValue("roomName")
-            };
+        device.fromXml = function (xmlString, callback) {
+            var xmlParser = xml.parser();
+            xmlParser.parse(xmlString, function () {
+                var opts = {
+                    id: xmlParser.query("/root/device/UDN")[0].text,
+                    deviceType: xmlParser.query("/root/device/deviceType")[0].text,
+                    speakerSize: xmlParser.query("/root/device/internalSpeakerSize")[0].text,
+                    services: xmlParser.query("/root/device/serviceList/service/eventSubURL").map(function (node) {
+                        return node.text;
+                    }),
+                    groupName: xmlParser.query("/root/device/roomName")[0].text
+                };
 
-            return device(opts);
+                callback(device(opts));
+            });
         };
 
         return device;
