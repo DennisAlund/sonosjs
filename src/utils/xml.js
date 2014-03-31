@@ -41,14 +41,16 @@ define(function (require) {
          * [supported by the sax-js parser]{@link https://github.com/isaacs/sax-js#arguments}
          *
          *
-         * @param {object}      opts        Parser options
-         * @param {boolean}     [strict]    Strict mode (default is true)
+         * @param {object}  opts                Parser options
+         * @param {boolean} [strict]            Strict mode (default is true)
+         * @param {boolean} [excludeNamespace]  Exclude namespace from tags (i.e. <u:tag> becomes <tag> default is true)
          * @returns {object} XML parser
          */
         function xmlParser(opts) {
             opts = opts || {};
             var that = {};
             var parser = sax.parser(opts.strict || true, opts);
+            var excludeNamespace = opts.excludeNamespace || true;
             var currentTagNode = null;
 
             that.getXmlStructure = function () {
@@ -104,8 +106,15 @@ define(function (require) {
             }
 
             function onOpenTag(tagNode) {
+                var tagName = tagNode.name;
+
+                if (excludeNamespace && tagName.indexOf(":") >= 0) {
+                    tagName = tagName.substr(tagName.indexOf(":") + 1);
+                }
+
+
                 var node = xmlNode({
-                    name: tagNode.name,
+                    name: tagName,
                     attributes: tagNode.attributes,
                     parent: currentTagNode
                 });
@@ -115,6 +124,10 @@ define(function (require) {
             }
 
             function onCloseTag(tagName) {
+                if (excludeNamespace && tagName.indexOf(":") >= 0) {
+                    tagName = tagName.substr(tagName.indexOf(":") + 1);
+                }
+
                 if (currentTagNode.name === tagName) {
                     currentTagNode = currentTagNode.parent;
                 }

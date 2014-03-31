@@ -36,5 +36,20 @@ define(function (require) {
                 QUnit.start();
             });
         });
+
+        QUnit.asyncTest("XML parser can ignore name spaces", function () {
+            var parser = xml.parser();
+
+            var xmlString = "<root><ns:a><u:b fooArg='1'></u:b><b fooArg='2'></b></ns:a><a><c></c></a></root>";
+            parser.parse(xmlString, function () {
+                var results = parser.query("/root/a/b");
+                QUnit.strictEqual(results.length, 2, "Correct amount of results.");
+                QUnit.ok(results.every(function (result) {
+                    return result.name === "b";
+                }), "Search result contains the expected elements.");
+
+                QUnit.start();
+            });
+        });
     }
 );
