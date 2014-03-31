@@ -3,7 +3,7 @@ require(["testConfig"], function (testConfig) {
 
     require.config(testConfig);
 
-    require(["utils/environment", "sugar", "unitTests"], function (env) {
+    require(["utils/environment", "unitTests"], function (env) {
 
         env.DEBUG = true;
         env.LOG_LEVEL = env.LOG_LEVELS.ERROR;

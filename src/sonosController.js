@@ -149,14 +149,15 @@ define(function (require) {
                     soapRequest.getUrl(device.ip, device.port),
                     soapRequest,
                     function soapMediaInfoCallback(xml) {
-                        var mediaInfo = models.mediaInfo.fromXml(xml);
-                        if (mediaInfo) {
-                            mediaInfo.setDevice(device);
-                            event.trigger(event.action.MEDIA_INFO, mediaInfo);
-                        }
-                        else {
-                            console.error("Had problems to parse media info XML.", xml);
-                        }
+                        models.mediaInfo.fromXml(xml, function (mediaInfo) {
+                            if (mediaInfo) {
+                                mediaInfo = device;
+                                event.trigger(event.action.MEDIA_INFO, mediaInfo);
+                            }
+                            else {
+                                console.error("Had problems to parse media info XML.", xml);
+                            }
+                        });
                     }
                 );
             };
@@ -194,14 +195,15 @@ define(function (require) {
                 net.http.get(
                     location,
                     function xhrCallback(xml) {
-                        var device = models.device.fromXml(xml);
-                        device.infoUrl = location;
+                        models.device.fromXml(xml, function (device) {
+                            device.infoUrl = location;
 
-                        var address = net.utils.extractAddressFromUrl(location).split(":");
-                        device.ip = address[0];
-                        device.port = address[1] || device.port;
+                            var address = net.utils.extractAddressFromUrl(location).split(":");
+                            device.ip = address[0];
+                            device.port = address[1] || device.port;
 
-                        deviceService.addDevice(device);
+                            deviceService.addDevice(device);
+                        });
                     }
                 );
                 setTimeout(manageDeviceDecay, deviceMaxLifetime);

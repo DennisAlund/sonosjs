@@ -124,7 +124,10 @@ module.exports = function (grunt) {
                 optimize: buildOptions.debug ? "none" : "uglify2",
                 paths: {
                     almond: "../lib/almond/almond",
-                    log: "./utils/log"
+                    sax: "../lib/sax/lib/sax"
+                },
+                shim: {
+                    sax: {exports: "sax"}
                 },
                 packages: ["models", "net", "soap", "ssdp"],
                 logLevel: 0,
