@@ -14,6 +14,7 @@
         "package.json"
     ],
     "dependencies": {
+        "sax": "https://github.com/isaacs/sax-js.git"
     },
     "devDependencies": {
         "qunit": "latest",

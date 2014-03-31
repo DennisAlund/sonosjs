@@ -5,11 +5,13 @@ define(function () {
         baseUrl: "../src",
         paths: {
             net: "../test/mocks/net-mock",
-            log: "./utils/log",
-            sugar: "../lib/sugar/release/sugar.min"
+            sax: "../lib/sax/lib/sax"
+        },
+        shim: {
+            sax: {exports: "sax"}
         },
         packages: [
-            "ssdp",
+            "models", "soap", "ssdp",
             {name: "unitTests", location: "../test/unit"},
             {name: "integrationTests", location: "../test/integration"},
             {name: "mocks", location: "../test/mocks"},
