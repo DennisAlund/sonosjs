@@ -98,6 +98,14 @@ define(function (require) {
         /**
          * Raw data parser into JSON formatted opts for a subscriptionResponse object.
          *
+         * The response should look something like this
+         *
+         *      HTTP/1.1 200 OK
+         *      SID: uuid:RINCON_000E58C8C45801400_sub0000002359
+         *      TIMEOUT: Second-3600
+         *      Server: Linux UPnP/1.0 Sonos/26.1-75050a (ZPS1)
+         *      Connection: close
+         *
          * @param {string} data     SSDP header data
          * @returns {Object} SSDP subscriptionResponse object
          */

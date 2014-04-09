@@ -51,6 +51,13 @@ define(function (require) {
             return that;
         }
 
+        /**
+         * Factory method for mediaInfo
+         * Creates a media info object from a XML string.
+         *
+         * @param {string}      xmlString
+         * @param {function}    callback    Method to call when finished
+         */
         mediaInfo.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {
@@ -76,7 +83,7 @@ define(function (require) {
                     radioMetaData.fromXml(metaDataXml, subCallback);
                 }
                 else {
-                    console.warn("Not know media type in URI: %s", opts.uri);
+                    console.warn("Not known media type in URI: %s", opts.uri);
                     subCallback(null);
                 }
             });
@@ -97,6 +104,13 @@ define(function (require) {
             return that;
         }
 
+        /**
+         * Factory method for musicFileMetaData
+         * Creates a music file meta data object from a XML string.
+         *
+         * @param {string}      xmlString
+         * @param {function}    callback    Method to call when finished
+         */
         musicFileMetaData.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {
@@ -122,6 +136,13 @@ define(function (require) {
             return that;
         }
 
+        /**
+         * Factory method for radioMetaData
+         * Creates a radio station meta data object from a XML string.
+         *
+         * @param {string}      xmlString
+         * @param {function}    callback    Method to call when finished
+         */
         radioMetaData.fromXml = function (xmlString, callback) {
             var xmlParser = xml.parser();
             xmlParser.parse(xmlString, function () {

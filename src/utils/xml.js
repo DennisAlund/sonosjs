@@ -43,7 +43,7 @@ define(function (require) {
          *
          * @param {object}  opts                Parser options
          * @param {boolean} [strict]            Strict mode (default is true)
-         * @param {boolean} [excludeNamespace]  Exclude namespace from tags (i.e. <u:tag> becomes <tag> default is true)
+         * @param {boolean} [excludeNamespace]  Exclude namespace from tags. Default is true (i.e. <u:tag> becomes <tag>)
          * @returns {object} XML parser
          */
         function xmlParser(opts) {
@@ -53,6 +53,11 @@ define(function (require) {
             var excludeNamespace = opts.excludeNamespace || true;
             var currentTagNode = null;
 
+            /**
+             * Get an object representation of the XML document.
+             *
+             * @returns {object} Null if there is no parsed document.
+             */
             that.getXmlStructure = function () {
                 return currentTagNode;
             };
@@ -95,16 +100,33 @@ define(function (require) {
             // ----------------------------------------------------------------
             // PRIVATE METHODS
 
+            /**
+             * XML parsing event.
+             *
+             * @param {Error}   error
+             */
             function onError(error) {
                 console.error("Error: ", error);
             }
 
+
+            /**
+             * XML parsing event.
+             *
+             * @param {string}   text
+             */
             function onText(text) {
                 if (currentTagNode) {
                     currentTagNode.text = text;
                 }
             }
 
+
+            /**
+             * XML parsing event.
+             *
+             * @param {object}   tagNode
+             */
             function onOpenTag(tagNode) {
                 var tagName = tagNode.name;
 
@@ -123,6 +145,11 @@ define(function (require) {
                 currentTagNode = node;
             }
 
+            /**
+             * XML parsing event.
+             *
+             * @param {string}   tagName
+             */
             function onCloseTag(tagName) {
                 if (excludeNamespace && tagName.indexOf(":") >= 0) {
                     tagName = tagName.substr(tagName.indexOf(":") + 1);
