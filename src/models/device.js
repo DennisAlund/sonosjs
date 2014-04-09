@@ -40,7 +40,7 @@ define(function (require) {
 
             that.id = opts.id;
             that.deviceType = opts.deviceType;
-            that.speakerSize = opts.speakerSize;
+            that.canPlayMusic = Number(opts.speakerSize) > 0;
             that.groupName = opts.groupName;
             that.services = opts.services ? opts.services.slice() : [];
             that.ip = null;
