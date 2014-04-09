@@ -23,8 +23,6 @@ define(function (require) {
         var net = require("net");
         var ssdp = require("ssdp");
 
-        var service = null;
-
         function upnpService() {
             var that = {};
             var httpServerSocket = 0;
@@ -110,19 +108,16 @@ define(function (require) {
             // INITIALIZE THE SERVICE
 
             (function init() {
+                console.debug("Initializing upnpService");
                 net.socket.httpServer.create({localPort: 1337}, function (socketInfo) {
                     httpServerSocket = socketInfo.socketId;
                 });
             }());
+
+
             return that;
         }
 
-
-        (function init() {
-            console.debug("Initializing upnpService");
-            service = upnpService();
-        }());
-
-        return service;
+        return upnpService();
     }
 );

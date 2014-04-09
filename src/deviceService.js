@@ -23,8 +23,6 @@ define(function (require) {
         var upnpService = require("upnpService");
         var event = require("utils/event");
 
-        var service = null;
-
         function deviceService() {
             var that = {};
             var devices = [];
@@ -94,14 +92,14 @@ define(function (require) {
                 return deviceIndex;
             }
 
+            (function init() {
+                console.debug("Initializing deviceService");
+            }());
+
             return that;
         }
 
-        (function init() {
-            console.debug("Initializing deviceService");
-            service = deviceService();
-        }());
 
-        return service;
+        return deviceService();
     }
 );
