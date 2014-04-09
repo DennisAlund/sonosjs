@@ -149,7 +149,7 @@ define(function (require) {
                     soapRequest.getUrl(device.ip, device.port),
                     soapRequest,
                     function soapMediaInfoCallback(xml) {
-                        models.mediaInfo.fromXml(xml, function (mediaInfo) {
+                        models.media.info.fromXml(xml, function (mediaInfo) {
                             if (mediaInfo) {
                                 event.trigger(event.action.MEDIA_INFO, {
                                     device: device,
