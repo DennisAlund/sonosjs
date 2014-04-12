@@ -17,27 +17,19 @@
  *
  * ------------------------------------------------------------------------- */
 
-define(function () {
+define(function (require) {
         "use strict";
+
+        var httpHeader = require("net/http/header");
 
         function httpRequest(opts) {
             var that = {};
+            var expectedLength = 0;
 
             that.serverSocketId = opts.serverSocketId || 0;
             that.remoteIp = opts.remoteIp || "0.0.0.0";
-
-            var expectedLength = 0;
-            var requestPath = "/";
-            var headers = "";
-            var body = "";
-
-            that.getRequestPath = function () {
-                return requestPath;
-            };
-
-            that.getBody = function () {
-                return body;
-            };
+            that.headers = null;
+            that.body = "";
 
             /**
              * A HTTP request can be split up in several TCP requests. Each TCP request should add its data through
@@ -48,27 +40,20 @@ define(function () {
             that.addData = function (data) {
                 var dataParts = data.split("\r\n\r\n");
 
-                if (headers.length === 0) {
-                    headers = dataParts.shift();
-                    body = dataParts.join("\r\n\r\n");
-
-                    var contentLengthMatch = headers.match(/CONTENT-LENGTH: (\d+)/i);
-                    expectedLength = contentLengthMatch.length === 2 ? Number(contentLengthMatch[1]) : 0;
-
-                    var firstLine = headers.split("\r\n")[0] || "";
-                    var pathMatch = firstLine.match(/\w+\s+(.*)\sHTTP\/1\.1/i);
-                    requestPath = pathMatch.length === 2 ? pathMatch[1] : "/";
+                if (!that.headers) {
+                    that.headers = httpHeader.fromData(dataParts.shift());
+                    that.body = dataParts.join("\r\n\r\n");
+                    expectedLength = Number(that.headers.getHeaderValue("CONTENT-LENGTH"));
                 }
                 else {
-                    body += data;
+                    that.body += data;
                 }
             };
 
 
             that.isComplete = function () {
-                return expectedLength === body.length;
+                return expectedLength === that.body.length;
             };
-
 
             return that;
         }

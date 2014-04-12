@@ -471,10 +471,14 @@ define(function (require) {
                 }
             }
 
-            function isRouteDefined(request) {
+            function getRequestCallback(request) {
                 var routes = serverSocketRegistry[request.serverSocketId].routes;
-                var requestPath = request.getRequestPath();
-                return routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function";
+                var requestPath = request.headers.requestPath;
+                if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
+                    return routes[requestPath];
+                }
+
+                return null;
             }
 
             // ----------------------------------------------------------------
@@ -503,16 +507,17 @@ define(function (require) {
                 }
 
                 var response;
-                if (isRouteDefined(request)) {
-                    var routes = serverSocketRegistry[request.serverSocketId].routes;
+                var requestHandler = getRequestCallback(request);
+                if (requestHandler) {
                     response = httpResponse.http200({
-                        body: routes[request.getRequestPath()](request)
+                        body: requestHandler(request)
                     });
                 }
 
                 else {
-                    console.warn("HTTP server '%d' does has not registered: %s", serverSocket, request.getRequestPath());
-                    console.debug(request.getBody());
+                    console.warn("HTTP server '%d' does has not registered: %s", serverSocket, request.headers.requestPath);
+                    console.warn("------------ HEADER------------ \n", request.headers);
+                    console.warn("------------ BODY ------------ \n", request.body);
                     response = httpResponse.http404();
                 }
 
