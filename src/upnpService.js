@@ -22,6 +22,7 @@ define(function (require) {
 
         var net = require("net");
         var ssdp = require("ssdp");
+        var deviceService = require("deviceService");
 
         function upnpService() {
             var that = {};
@@ -107,6 +108,17 @@ define(function (require) {
                 });
             };
 
+
+            function onHttpServerRouteNotify(request) {
+                var device = deviceService.getDevice({ip: request.remoteIp});
+                if (!device) {
+                    console.warn("Local registry does not know of any device at '%s'", request.remoteIp);
+                    throw new Error("The peer is not known to the controller.");
+                }
+
+                return "";
+            }
+
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
             // INITIALIZE THE SERVICE
@@ -115,6 +127,7 @@ define(function (require) {
                 console.debug("Initializing upnpService");
                 net.socket.httpServer.create({localPort: 1337}, function (socketInfo) {
                     httpServerSocket = socketInfo.socketId;
+                    net.socket.httpServer.addRoute(httpServerSocket, "/notify", onHttpServerRouteNotify);
                 });
             }());
 
