@@ -181,7 +181,7 @@ define(function (require) {
 
                 deviceService.getDevices().forEach(function (device) {
                     if (device.lastUpdated <= referenceTime) {
-                        deviceService.deviceService.removeDevice(device);
+                        deviceService.removeDevice(device);
                         requestDeviceDetails(device.infoUrl);
                     }
                 });
