@@ -520,15 +520,24 @@ define(function (require) {
                 var response;
                 var requestHandler = getRequestCallback(request);
                 if (requestHandler) {
-                    response = httpResponse.http200({
-                        body: requestHandler(request)
-                    });
+                    // Debugging ... until majority of requests has been documented
+                    console.info("------------ HEADER------------ \n", request.headers);
+                    console.info("------------ BODY ------------ \n", request.body);
+
+                    try {
+                        response = httpResponse.http200({
+                            body: requestHandler(request)
+                        });
+                    }
+                    catch (error) {
+                        response = httpResponse.http500({
+                            body: error
+                        });
+                    }
                 }
 
                 else {
                     console.warn("HTTP server '%d' does has not registered: %s", serverSocket, request.headers.requestPath);
-                    console.warn("------------ HEADER------------ \n", request.headers);
-                    console.warn("------------ BODY ------------ \n", request.body);
                     response = httpResponse.http404();
                 }
 

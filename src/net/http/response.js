@@ -103,9 +103,24 @@ define(function () {
             return that;
         }
 
+        function http500(opts) {
+            opts = opts || {};
+
+            var that = httpResponse(opts);
+
+            (function init() {
+                that.setStatus(500, "Internal Server Error");
+                that.setContentType("text/html");
+            }());
+
+            return that;
+        }
+
+
         return {
             http200: http200,
-            http404: http404
+            http404: http404,
+            http500: http500
         };
     }
 );
