@@ -414,23 +414,34 @@ define(function (require) {
 
             /**
              * Simple mapping of a route to a callback function that will process the request.
-             * The callback method should look like this: function({object} data)
-             * The properties of the data object is
-             *      headers     {string}    A multi line string with HTTP headers
-             *      body        {string}    A multi line string with the HTML body (optional)
+             * The callback method should look like this: ```function({httpRequest} request)```
              *
+             *   - A route should be on the form "/some/path". Without scheme and host.
+             *   - /this/path is the same as /this/path/)
+             *   - Re-registering a route will overwrite the existing route with the new.
+             *   - The callback method should return a string that will be put in the response body
+             *   - The callback method can throw an exception to produce a HTTP 500 response
              *
-             *  - A route should be on the form "/some/path". Without scheme and host.
-             *  - Routes are unique by string comparison (i.e. /this/path is different from /this/path/)
-             *  - Re-registering a route will overwrite the existing route with the new.
+             * @example
+             *      net.socket.httpServer.create({localPort: 1337}, function (socketInfo) {
+             *          net.socket.httpServer.addRoute(socketInfo.socketId, "/my/route/", function(request){
+             *              if (request.headers.requestPath !== "/my/route/") {
+             *                  throw "Impossible!";
+             *              }
+             *          });
+             *      });
              *
              * @param {number}      socketId    Socket id
              * @param {string}      route       A resource path
              * @param {function}    callback    Callback method for handling requests
              */
             that.addRoute = function (socketId, route, callback) {
-                console.debug("HTTP server '%d' register route: %s", socketId, route);
                 if (serverSocketRegistry.hasOwnProperty(socketId)) {
+                    console.debug("HTTP server '%d' register route: %s", socketId, route);
+                    if (route.substr(-1) === "/") {
+                        // Remove trailing slash
+                        route = route.substr(0, route.length - 1);
+                    }
                     serverSocketRegistry[socketId].routes[route] = callback;
                 }
             };
