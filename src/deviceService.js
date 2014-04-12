@@ -20,7 +20,6 @@
 define(function (require) {
         "use strict";
 
-        var upnpService = require("upnpService");
         var event = require("utils/event");
 
         function deviceService() {
@@ -63,7 +62,7 @@ define(function (require) {
                 }
 
                 devices.splice(deviceIndex, 1);
-                upnpService.unregister(device);
+                device.clearSubscriptions();
                 event.trigger(event.action.DEVICES, devices.slice());
             };
 
@@ -73,7 +72,6 @@ define(function (require) {
                 if (deviceIndex < 0) {
                     console.debug("Added new device: %s", device.id);
                     devices.push(device);
-                    upnpService.register(device);
                     event.trigger(event.action.DEVICES, devices.slice());
                 }
                 else {
@@ -81,6 +79,10 @@ define(function (require) {
                     devices[deviceIndex] = device;
                 }
             };
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // PRIVATE METHODS
 
             function findDeviceIndex(searchKey, searchValue) {
                 var deviceIndex = -1;
@@ -91,6 +93,10 @@ define(function (require) {
                 });
                 return deviceIndex;
             }
+
+            // ----------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // INITIALIZE THE SERVICE
 
             (function init() {
                 console.debug("Initializing deviceService");

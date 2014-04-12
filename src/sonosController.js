@@ -182,6 +182,7 @@ define(function (require) {
                 deviceService.getDevices().forEach(function (device) {
                     if (device.lastUpdated <= referenceTime) {
                         deviceService.removeDevice(device);
+                        upnpService.unregister(device);
                         requestDeviceDetails(device.infoUrl);
                     }
                 });
@@ -205,6 +206,7 @@ define(function (require) {
                             device.port = address[1] || device.port;
 
                             deviceService.addDevice(device);
+                            upnpService.register(device);
                         });
                     }
                 );
@@ -247,11 +249,11 @@ define(function (require) {
 
                 console.debug("Got a notification message: %s", notification.advertisement);
 
-                var deviceId = notification.getId();
+                var device = deviceService.getDevice({id: notification.getId()});
 
                 switch (notification.advertisement) {
                 case ssdp.advertisementType.goodbye:
-                    deviceService.removeDevice(deviceId);
+                    deviceService.removeDevice(device);
                     break;
                 case ssdp.advertisementType.alive:
                 case ssdp.advertisementType.update:
