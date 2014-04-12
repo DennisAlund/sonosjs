@@ -41,6 +41,10 @@ define(function (require) {
              * @param {Object}  device  The device to register services for
              */
             that.register = function (device) {
+                if (device.haveSubscriptions()) {
+                    return;
+                }
+
                 var httpServerSocketInfo = net.socket.httpServer.getSocketInfo(httpServerSocket);
 
                 device.services.forEach(function (servicePath) {

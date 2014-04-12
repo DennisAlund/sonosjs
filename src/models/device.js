@@ -74,6 +74,22 @@ define(function (require) {
             };
 
             /**
+             * Clears all known subscription data
+             */
+            that.clearSubscriptions = function () {
+                registeredServices.length = 0;
+            };
+
+            /**
+             * Control function to be able to prevent double subscriptions towards the same device.
+             *
+             * @returns {boolean} True if the device has been registered to 1 or more event subscriptions
+             */
+            that.haveSubscriptions = function () {
+                return registeredServices.length > 0;
+            };
+
+            /**
              * Returns a unique id for the device and the service it represents.
              * This is only useful if you are dealing with multiple services for the same device.
              *
