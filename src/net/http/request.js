@@ -22,11 +22,24 @@ define(function (require) {
 
         var httpHeader = require("net/http/header");
 
+        /**
+         * A HTTP request as in: a request to the local web server.
+         * The request object can build HTTP requests that are split into several TCP packages. Just keep adding data
+         * until the string length of the body and "CONTENT-LENGTH" HTTP header value are the same.
+         *
+         * @param {object} opts                     Object initialization options
+         * @param {number} opts.serverSocketId      HTTP server socket id
+         * @param {string} opts.remoteIp            IP of the requesting host
+         *
+         * @returns {object} HTTP request object
+         */
         function httpRequest(opts) {
+            opts = opts || {};
+
             var that = {};
             var expectedLength = 0;
 
-            that.serverSocketId = opts.serverSocketId || 0;
+            that.serverSocketId = Number(opts.serverSocketId || 0);
             that.remoteIp = opts.remoteIp || "0.0.0.0";
             that.headers = null;
             that.body = "";
@@ -38,19 +51,27 @@ define(function (require) {
              * @param {string}  data    Data as received on the TCP socket
              */
             that.addData = function (data) {
-                var dataParts = data.split("\r\n\r\n");
+                data = data || "";
+
+                var requestData = data.replace(/\r\n/g, "\n"); // Normalize line endings
+                var dataParts = requestData.split("\n\n"); // Header and body is divided by a empty line
 
                 if (!that.headers) {
                     that.headers = httpHeader.fromData(dataParts.shift());
-                    that.body = dataParts.join("\r\n\r\n");
+                    that.body = dataParts.join("\n\n").trim();
                     expectedLength = Number(that.headers.getHeaderValue("CONTENT-LENGTH"));
                 }
                 else {
-                    that.body += data;
+                    that.body += requestData;
                 }
             };
 
 
+            /**
+             * This  check will return false if the request is still expecting more body data.
+             *
+             * @returns {boolean} True if HTTP header value CONTENT-LENGTH is equal to the string length of the body
+             */
             that.isComplete = function () {
                 return expectedLength === that.body.length;
             };

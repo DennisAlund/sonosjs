@@ -18,10 +18,8 @@
  * ------------------------------------------------------------------------- */
 
 define(function (require) {
-    "use strict";
+        "use strict";
 
-    // No need to expose anything. Test files should not return any module environment
-    require("./upnp/ssdp-tests");
-    require("./utils/xml-tests");
-    require("./net/main");
-});
+        require("./http/request-tests");
+    }
+);
