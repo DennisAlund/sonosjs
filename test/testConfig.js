@@ -4,7 +4,8 @@ define(function () {
     return {
         baseUrl: "../src",
         paths: {
-            sax: "../lib/sax/lib/sax"
+            sax: "../lib/sax/lib/sax",
+            text: "../lib/requirejs-text/text"
         },
         shim: {
             sax: {exports: "sax"}
