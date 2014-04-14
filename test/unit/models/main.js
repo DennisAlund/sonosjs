@@ -20,9 +20,6 @@
 define(function (require) {
         "use strict";
 
-        return {
-            upnp: require("./upnp/main"),
-            ssdp: require("./ssdp")
-        };
+        require("./state-tests");
     }
 );

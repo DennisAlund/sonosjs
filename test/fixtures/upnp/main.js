@@ -21,8 +21,9 @@ define(function (require) {
         "use strict";
 
         return {
-            upnp: require("./upnp/main"),
-            ssdp: require("./ssdp")
+            notifyEvents: {
+                lastChange: require("text!./notifyEvents/httpRequest-lastChange.txt")
+            }
         };
     }
 );

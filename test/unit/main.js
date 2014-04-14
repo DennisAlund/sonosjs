@@ -23,5 +23,6 @@ define(function (require) {
     // No need to expose anything. Test files should not return any module environment
     require("./upnp/ssdp-tests");
     require("./utils/xml-tests");
+    require("./models/main");
     require("./net/main");
 });
