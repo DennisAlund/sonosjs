@@ -41,7 +41,7 @@ define(function (require) {
          * [supported by the sax-js parser]{@link https://github.com/isaacs/sax-js#arguments}
          *
          *
-         * @param {object}  opts                Parser options
+         * @param {object}  [opts]              Parser options
          * @param {boolean} [strict]            Strict mode (default is true)
          * @param {boolean} [excludeNamespace]  Exclude namespace from tags. Default is true (i.e. <u:tag> becomes <tag>)
          * @returns {object} XML parser
@@ -204,11 +204,11 @@ define(function (require) {
          */
         function decodeXml(encodedXml) {
             return decodeURI(encodedXml)
-                .replace(/&amp;/g, "&")
                 .replace(/&lt;/g, "<")
                 .replace(/&gt;/g, ">")
                 .replace(/&quot;/g, "\"")
-                .replace(/&#039;/g, "'");
+                .replace(/&#039;/g, "'")
+                .replace(/&amp;/g, "&");
         }
 
 
