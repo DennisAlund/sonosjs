@@ -437,11 +437,8 @@ define(function (require) {
              */
             that.addRoute = function (socketId, route, callback) {
                 if (serverSocketRegistry.hasOwnProperty(socketId)) {
+                    route = removeTrailingSlash(route);
                     console.debug("HTTP server '%d' register route: %s", socketId, route);
-                    if (route.substr(-1) === "/") {
-                        // Remove trailing slash
-                        route = route.substr(0, route.length - 1);
-                    }
                     serverSocketRegistry[socketId].routes[route] = callback;
                 }
             };
@@ -467,6 +464,12 @@ define(function (require) {
             // ----------------------------------------------------------------
             // PRIVATE METHODS
 
+            function removeTrailingSlash(route) {
+                if (route.substr(-1) === "/") {
+                    return route.slice(0, -1);
+                }
+                return route;
+            }
 
             /**
              * Remove any cache and associations with a client socket. Will also try to close the client socket.
@@ -484,7 +487,7 @@ define(function (require) {
 
             function getRequestCallback(request) {
                 var routes = serverSocketRegistry[request.serverSocketId].routes;
-                var requestPath = request.headers.requestPath;
+                var requestPath = removeTrailingSlash(request.headers.requestPath);
                 if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
                     return routes[requestPath];
                 }
