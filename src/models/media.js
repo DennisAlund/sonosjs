@@ -39,6 +39,10 @@ define(function (require) {
 
             var that = opts;
             that.type = mediaInfoTypes.MUSIC_FILE;
+            that.albumArtUri = opts.albumArtUri || "";
+            that.title = opts.title || "";
+            that.artist = opts.artist || "";
+            that.album = opts.album || "";
 
             return that;
         }
@@ -55,7 +59,6 @@ define(function (require) {
             xmlParser.parse(xmlString, function () {
                 var queryBase = "/DIDL-Lite/item/";
                 var opts = {
-                    upnpClass: xmlParser.query(queryBase + "class")[0].text,
                     albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
                     title: xmlParser.query(queryBase + "title")[0].text,
                     artist: xmlParser.query(queryBase + "creator")[0].text,
@@ -78,6 +81,8 @@ define(function (require) {
 
             var that = opts;
             that.type = mediaInfoTypes.RADIO_STATION;
+            that.albumArtUri = opts.albumArtUri || "";
+            that.title = opts.title || "";
 
             return that;
         }
@@ -94,11 +99,8 @@ define(function (require) {
             xmlParser.parse(xmlString, function () {
                 var queryBase = "/DIDL-Lite/item/";
                 var opts = {
-                    upnpClass: xmlParser.query(queryBase + "class")[0].text,
                     albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
-                    title: xmlParser.query(queryBase + "title")[0].text,
-                    artist: xmlParser.query(queryBase + "creator")[0].text,
-                    album: xmlParser.query(queryBase + "album")[0].text
+                    title: xmlParser.query(queryBase + "title")[0].text
                 };
 
                 callback(radioStationMetaData(opts));
@@ -116,8 +118,6 @@ define(function (require) {
             opts = opts || {};
             var that = {};
 
-            var uri = opts.uri;
-
             that.id = opts.uri;
             that.type = mediaInfoTypes.UNKNOWN;
             that.duration = opts.duration;
@@ -125,18 +125,6 @@ define(function (require) {
             that.mediaType = opts.mediaType;
             that.metaData = opts.metaData;
             that.playQueueNumber = opts.playQueueNumber;
-
-            (function init() {
-                if (uri.toLowerCase().indexOf("x-file-cifs") >= 0) {
-                    that.type = mediaInfoTypes.MUSIC_FILE;
-                }
-                else if (uri.indexOf("x-rincon-mp3radio") >= 0) {
-                    that.type = mediaInfoTypes.RADIO_STATION;
-                }
-                else {
-                    console.warn("Not known media type in URI: %s", opts.uri);
-                }
-            }());
 
             return that;
         }
@@ -181,10 +169,33 @@ define(function (require) {
             });
         };
 
+        /**
+         * Automatically select and create correct meta data type for a media info object. Note well that the meta data
+         * is not assigned to the mediaInfoObject that is passed as a parameter. This is to avoid unnecessary magic.
+         *
+         * @param {object}      mediaInfoObject     Instance of media.info
+         * @param {string}      xmlString
+         * @param {function}    callback            Method to call when finished
+         */
+        function metaDataFromXml(mediaInfoObject, metaDataXml, callback) {
+            var uri = mediaInfoObject.id.toLowerCase();
+            if (uri.indexOf("x-file-cifs") >= 0) {
+                musicFileMetaData.fromXml(metaDataXml, callback);
+            }
+            else if (uri.indexOf("x-rincon-mp3radio") >= 0) {
+                radioStationMetaData.fromXml(metaDataXml, callback);
+            }
+            else {
+                console.warn("Not known media type in media info URI: %s", uri);
+                callback(null);
+            }
+        }
+
         return {
             type: mediaInfoTypes,
             info: mediaInfo,
             metaData: {
+                fromXml: metaDataFromXml,
                 musicFile: musicFileMetaData,
                 radioStation: radioStationMetaData
             }

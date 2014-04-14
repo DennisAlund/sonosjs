@@ -23,11 +23,10 @@ define(function (require) {
         var xml = require("utils/xml");
         var media = require("models/media");
 
-        var modelType = {
+        var stateInformationType = {
             LAST_CHANGE: "%%E:MODEL_STATE_LAST_CHANGE%%",
             GROUP_VOLUME: "%%E:MODEL_STATE_GROUP_VOLUME%%"
         };
-
 
         /**
          * Play state for the device.
@@ -74,11 +73,11 @@ define(function (require) {
          *   - SHUFFLE          - Repeat the whole playlist and shuffle... yes, this is hard to accept
          *   - SHUFFLE_NOREPEAT - No repeat, but do shuffle
          *
-         * @param {object}      opts                    Object initializing options
-         * @param {string}      opts.playState          "STOPPED", "PAUSED_PLAYBACK" or "PLAYING"
-         * @param {string}      opts.playMode           "NORMAL", "REPEAT_ALL", "SHUFFLE", "SHUFFLE_NOREPEAT"
-         * @param {mediaInfo}   opts.mediaInfo
-         * @param {number}      opts.numberOfTracks     Total number of tracks in the play queue
+         * @param {object}          opts                    Object initializing options
+         * @param {string}          opts.playState          "STOPPED", "PAUSED_PLAYBACK" or "PLAYING"
+         * @param {string}          opts.playMode           "NORMAL", "REPEAT_ALL", "SHUFFLE", "SHUFFLE_NOREPEAT"
+         * @param {object}          opts.mediaInfo          mediaInfo object
+         * @param {number|string}   opts.numberOfTracks     Total number of tracks in the play queue
          * @returns {object} Device state information
          */
         function lastChange(opts) {
@@ -89,9 +88,10 @@ define(function (require) {
             var playState = opts.playState;
             var playMode = opts.playMode;
 
+            that.model = stateInformationType.LAST_CHANGE;
             that.mediaInfo = opts.mediaInfo;
-            that.numberOfTracks = opts.numberOfTracks;
-            that.playState = opts.playState;
+            that.numberOfTracks = Number(opts.numberOfTracks);
+            that.playState = playStateType.STOPPED;
             that.repeatMode = repeatModeType.OFF;
             that.playMode = playModeType.ORDERED;
 
@@ -151,47 +151,46 @@ define(function (require) {
          * @param {function}    callback    Method to call when finished
          */
         lastChange.fromXml = function (xmlString, callback) {
+            // Everything below the LastChange tag is URL encoded and the meta data is encoded twice
+            xmlString = xml.decode(xmlString);
             var xmlParser = xml.parser();
+
+            // Local helper function
+            function getValueAttribute(xmlNode) {
+                if (!xmlNode) {
+                    return null;
+                }
+
+                return xmlNode.attributes && xmlNode.attributes.val;
+            }
+
             xmlParser.parse(xmlString, function () {
                 var queryBase = "/propertyset/property/LastChange/Event/InstanceID/";
 
                 var mediaInfo = media.info({
-                    playQueueNumber: xmlParser.query(queryBase + "CurrentTrack")[0].attributes.val,
-                    duration: xmlParser.query(queryBase + "CurrentTrackDuration")[0].attributes.val,
-                    uri: xmlParser.query(queryBase + "CurrentTrackURI")[0].attributes.val,
-                    currentTime: xmlParser.query(queryBase + "CurrentRelTime")[0].attributes.val // Just guessing from naming convention
+                    playQueueNumber: getValueAttribute(xmlParser.query(queryBase + "CurrentTrack")[0]),
+                    duration: getValueAttribute(xmlParser.query(queryBase + "CurrentTrackDuration")[0]),
+                    uri: getValueAttribute(xmlParser.query(queryBase + "CurrentTrackURI")[0]),
+                    currentTime: getValueAttribute(xmlParser.query(queryBase + "CurrentRelTime")[0]) // Just guessing from naming convention
                 });
 
-                debugger; // Have to see what current track time offset is named in this XML
 
                 // Call this method to finish the last data structures when the underlying structures are done
-                var metaDataFactoryCallback = function (metaData) {
+                var metaDataXml = getValueAttribute(xmlParser.query(queryBase + "CurrentTrackMetaData")[0]);
+
+                media.metaData.fromXml(mediaInfo, metaDataXml, function (metaData) {
                     mediaInfo.metaData = metaData;
                     var deviceStateOpts = {
-                        playState: xmlParser.query(queryBase + "TransportState")[0].attributes.val,
-                        playMode: xmlParser.query(queryBase + "CurrentPlayMode")[0].attributes.val,
-                        numberOfTracks: xmlParser.query(queryBase + "NumberOfTracks")[0].attributes.val,
+                        playState: getValueAttribute(xmlParser.query(queryBase + "TransportState")[0]),
+                        playMode: getValueAttribute(xmlParser.query(queryBase + "CurrentPlayMode")[0]),
+                        numberOfTracks: getValueAttribute(xmlParser.query(queryBase + "NumberOfTracks")[0]),
                         mediaInfo: mediaInfo
                     };
 
                     // TODO: Parse the NextTrack<...> information and create a nextMediaInfo property
 
                     callback(lastChange(deviceStateOpts));
-                };
-
-                var metaDataXml = xmlParser.query(queryBase + "CurrentTrackMetaData")[0].attributes.val;
-                metaDataXml = xml.decode(metaDataXml);
-
-                switch (mediaInfo.type) {
-                case media.type.MUSIC_FILE:
-                    metaData.musicFile.fromXml(metaDataXml, metaDataFactoryCallback);
-                    break;
-                case media.type.RADIO_STATION:
-                    metaData.radioStation.fromXml(metaDataXml, metaDataFactoryCallback);
-                    break;
-                default:
-                    metaDataFactoryCallback(null);
-                }
+                });
             });
         };
 
@@ -201,6 +200,7 @@ define(function (require) {
 
             var that = {};
 
+            that.model = stateInformationType.GROUP_VOLUME;
             that.volume = Number(opts.volume || 0);
             that.canChangeVolume = Number(opts.canChangeVolume || 0) === 1;
             that.mute = Number(opts.mute || 0) === 1;
@@ -229,6 +229,7 @@ define(function (require) {
         };
 
         return {
+            informationType: stateInformationType,
             playState: playStateType,
             playMode: playModeType,
             repeatMode: repeatModeType,

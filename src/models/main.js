@@ -23,7 +23,7 @@ define(function (require) {
         return {
             device: require("models/device"),
             mediaInfo: require("models/media"),
-            deviceState: require("models/state")
+            state: require("models/state")
         };
     }
 );
