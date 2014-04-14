@@ -43,10 +43,38 @@ define(function (require) {
             });
         });
 
+        QUnit.asyncTest("Can create groupVolume object from XML", function () {
+            // Arrange
+            var testData = getPayload(fixtures.upnp.notifyEvents.groupVolume);
+
+            // Act
+            models.state.groupVolume.fromXml(testData, function (groupVolume) {
+                // Assert
+                QUnit.ok(groupVolume, "Looks good at first glance.");
+                QUnit.strictEqual(typeof(groupVolume.volume), "number", "Some volume is set.");
+                QUnit.strictEqual(typeof(groupVolume.canChangeVolume), "boolean", "The \"can change volume\" flag is set.");
+                QUnit.strictEqual(typeof(groupVolume.isMuted), "boolean", "The \"mute\" flag is set.");
+                QUnit.strictEqual(models.state.informationType.GROUP_VOLUME, groupVolume.model, "Correct object type.");
+
+                // And... move on
+                QUnit.start();
+            });
+        });
+
+
+        // ----------------------------------------------------------------
+        // ----------------------------------------------------------------
+        // TEST HELPER METHODS
 
         function getPayload(requestData) {
             var httpRequest = request();
             httpRequest.addData(requestData);
+            if (!httpRequest.isComplete()) {
+                QUnit.log(function () {
+                    console.error("Test data is not correct!");
+                });
+                return null;
+            }
             return httpRequest.body;
         }
     }

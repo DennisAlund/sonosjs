@@ -22,7 +22,8 @@ define(function (require) {
 
         return {
             notifyEvents: {
-                lastChange: require("text!./notifyEvents/httpRequest-lastChange.txt")
+                lastChange: require("text!./notifyEvents/httpRequest-lastChange.txt"),
+                groupVolume: require("text!./notifyEvents/httpRequest-groupVolume.txt")
             }
         };
     }

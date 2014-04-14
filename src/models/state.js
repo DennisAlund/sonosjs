@@ -195,6 +195,16 @@ define(function (require) {
         };
 
 
+        /**
+         * Information about the volume level of a media group (also referred to as "room" by SONOS)
+         *
+         * @param {object}  opts                    Object initializing options
+         * @param {number}  opts.volume
+         * @param {boolean} opts.canChangeVolume
+         * @param {boolean} opts.isMuted
+         *
+         * @returns {object} Group volume object
+         */
         function groupVolume(opts) {
             opts = opts || {};
 
@@ -203,7 +213,7 @@ define(function (require) {
             that.model = stateInformationType.GROUP_VOLUME;
             that.volume = Number(opts.volume || 0);
             that.canChangeVolume = Number(opts.canChangeVolume || 0) === 1;
-            that.mute = Number(opts.mute || 0) === 1;
+            that.isMuted = Number(opts.mute || 0) === 1;
 
             return that;
         }
@@ -233,8 +243,8 @@ define(function (require) {
             playState: playStateType,
             playMode: playModeType,
             repeatMode: repeatModeType,
-            lastChange: lastChange
+            lastChange: lastChange,
+            groupVolume: groupVolume
         };
-
     }
 );
