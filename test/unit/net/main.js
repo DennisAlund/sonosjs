@@ -20,6 +20,7 @@
 define(function (require) {
         "use strict";
 
+        require("./http/header-tests");
         require("./http/request-tests");
     }
 );

@@ -69,16 +69,17 @@ define(function () {
          * @returns {object} HTTP header object
          */
         httpHeader.fromData = function (data) {
-            var header = data.trim();
-
-            var headerEnd = header.search(/^\n+$/m); // Header ends with a single empty line
-            if (headerEnd >= 0) {
-                header = header.substr(0, headerEnd);
+            var dataParts = (data || "")
+                .trim()
+                .replace(/\r\n/g, "\n") // Normalize line endings
+                .split("\n\n"); // Separate header from body
+            if (!dataParts || dataParts.length === 0) {
+                return null;
             }
 
             var requestLine = "";
             var headers = [];
-            header.split("\n").forEach(function (headerLine, lineNumber) {
+            dataParts[0].split("\n").forEach(function (headerLine, lineNumber) {
                 headerLine = headerLine.trim();
                 if (lineNumber === 0 && headerLine.indexOf("HTTP/1.1") >= 0) {
                     requestLine = headerLine;
