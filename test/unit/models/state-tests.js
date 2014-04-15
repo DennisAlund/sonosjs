@@ -28,7 +28,7 @@ define(function (require) {
 
         QUnit.asyncTest("Can create lastChange object from XML", function () {
             // Arrange
-            var testData = getPayload(fixtures.upnp.notifyEvents.lastChange);
+            var testData = getPayload(fixtures.httpServerRequests.notify.lastChange);
 
             // Act
             models.state.lastChange.fromXml(testData, function (lastChangeObject) {
@@ -45,7 +45,7 @@ define(function (require) {
 
         QUnit.asyncTest("Can create groupVolume object from XML", function () {
             // Arrange
-            var testData = getPayload(fixtures.upnp.notifyEvents.groupVolume);
+            var testData = getPayload(fixtures.httpServerRequests.notify.groupVolume);
 
             // Act
             models.state.groupVolume.fromXml(testData, function (groupVolume) {

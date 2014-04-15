@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         return {
-            upnp: require("./upnp/main"),
+            httpServerRequests: require("./httpServerRequests/main"),
             ssdp: require("./ssdp")
         };
     }

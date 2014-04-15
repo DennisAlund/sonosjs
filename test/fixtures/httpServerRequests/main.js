@@ -21,9 +21,9 @@ define(function (require) {
         "use strict";
 
         return {
-            notifyEvents: {
-                lastChange: require("text!./notifyEvents/httpRequest-lastChange.txt"),
-                groupVolume: require("text!./notifyEvents/httpRequest-groupVolume.txt")
+            notify: {
+                groupVolume: require("text!./notifyGroupVolume.txt"),
+                lastChange: require("text!./notifyLastChange.txt")
             }
         };
     }
