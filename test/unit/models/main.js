@@ -20,6 +20,7 @@
 define(function (require) {
         "use strict";
 
+        require("./device-tests");
         require("./state-tests");
     }
 );
