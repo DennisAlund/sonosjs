@@ -20,15 +20,18 @@
 define(function (require) {
         "use strict";
 
+        var fixtures = require("fixtures");
         var header = require("net/http/header");
 
         QUnit.module("Unit test: net/http/header");
 
         QUnit.test("Can parse HTTP request headers with line break '\\n'", function () {
             // Arrange
-            var testData = buildHttpHeaders({
-                lineBreak: "\n"
-            });
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withLineEndings("\n")
+                .withRequestLine("POST /foo/bar HTTP/1.1")
+                .withKeyValuePair("HOST", "192.168.1.1:58008")
+                .build();
 
             // Act
             var httpHeader = header.fromData(testData);
@@ -40,9 +43,11 @@ define(function (require) {
 
         QUnit.test("Can parse a HTTP request with line break '\\r\\n'", function () {
             // Arrange
-            var testData = buildHttpHeaders({
-                lineBreak: "\r\n"
-            });
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withLineEndings("\r\n")
+                .withRequestLine("POST /foo/bar HTTP/1.1")
+                .withKeyValuePair("HOST", "192.168.1.1:58008")
+                .build();
 
             // Act
             var httpHeader = header.fromData(testData);
@@ -54,7 +59,11 @@ define(function (require) {
 
         QUnit.test("Header is either separated from body with empty line or the whole payload is header.", function () {
             // Arrange
-            var testData = buildHttpHeaders();
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withLineEndings("\n")
+                .withRequestLine("POST /foo/bar HTTP/1.1")
+                .withKeyValuePair("HOST", "192.168.1.1:58008")
+                .build();
 
             // Act
             var httpHeader = header.fromData(testData + "\n\nIGNORE: THIS");
@@ -67,7 +76,12 @@ define(function (require) {
 
         QUnit.test("Can read valid header values and they are case insensitive", function () {
             // Arrange
-            var testData = buildHttpHeaders();
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("POST /foo/bar HTTP/1.1")
+                .withKeyValuePair("HOST", "192.168.1.1:58008")
+                .withKeyValuePair("CONTENT-TYPE", "text/xml")
+                .withKeyValuePair("CONTENT-LENGTH", "1234")
+                .build();
 
             // Act
             var httpHeader = header.fromData(testData);
@@ -79,22 +93,5 @@ define(function (require) {
             QUnit.strictEqual(httpHeader.getHeaderValue("content-LENGTH"), "1234", "CONTENT-LENGTH value is correct.");
             QUnit.strictEqual(httpHeader.getHeaderValue("DOES-NOT-EXIST"), null, "Unknown key returns NULL.");
         });
-
-        // ----------------------------------------------------------------
-        // ----------------------------------------------------------------
-        // TEST HELPER METHODS
-
-        function buildHttpHeaders(opts) {
-            opts = opts || {};
-
-            var typeOfLineBreak = opts.lineBreak || "\n";
-
-            return [
-                "POST /foo/bar HTTP/1.1",
-                "HOST: 192.168.1.1:58008",
-                "CONTENT-TYPE: text/xml",
-                "CONTENT-LENGTH: 1234"
-            ].join(typeOfLineBreak);
-        }
     }
 );

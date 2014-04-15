@@ -22,7 +22,10 @@ define(function (require) {
 
         return {
             httpServerRequests: require("./httpServerRequests/main"),
-            ssdp: require("./ssdp")
+            ssdp: require("./ssdp"),
+            builders: {
+                httpHeaderBuilder: require("./httpHeaderBuilder")
+            }
         };
     }
 );
