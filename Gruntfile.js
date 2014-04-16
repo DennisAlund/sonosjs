@@ -24,8 +24,7 @@ module.exports = function (grunt) {
 
         qunit: {
             all: ["./test/**/*.html"],
-            unit: ["./test/unit.html"],
-            integration: ["./test/integration.html"]
+            unit: ["./test/unit.html"]
         },
 
         replace: {
