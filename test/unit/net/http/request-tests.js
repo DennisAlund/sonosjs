@@ -20,15 +20,20 @@
 define(function (require) {
         "use strict";
 
+        var fixtures = require("fixtures");
         var request = require("net/http/request");
 
         QUnit.module("Unit test: net/http/request");
 
         QUnit.test("Can parse a HTTP request with line break '\\n'", function () {
             // Arrange
-            var testData = buildHttpRequest({
-                lineBreak: "\n"
-            });
+            var testData = fixtures.builders.httpRequestBuilder()
+                .withLineEndings("\n")
+                .withBody("<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' " +
+                    "s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body>" +
+                    "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
+                    "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
+                .build();
             var httpRequest = request();
 
             // Act
@@ -41,9 +46,13 @@ define(function (require) {
 
         QUnit.test("Can parse a HTTP request with line break '\\r\\n'", function () {
             // Arrange
-            var testData = buildHttpRequest({
-                lineBreak: "\r\n"
-            });
+            var testData = fixtures.builders.httpRequestBuilder()
+                .withLineEndings("\r\n")
+                .withBody("<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' " +
+                    "s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body>" +
+                    "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
+                    "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
+                .build();
             var httpRequest = request();
 
             // Act
@@ -56,7 +65,13 @@ define(function (require) {
 
         QUnit.test("Can divide body data in several stages.", function () {
             // Arrange
-            var testData = buildHttpRequest();
+            var testData = fixtures.builders.httpRequestBuilder()
+                .withBody("<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' " +
+                    "s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body>" +
+                    "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
+                    "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
+                .build();
+
             var httpRequest = request();
 
             // Act
@@ -67,25 +82,5 @@ define(function (require) {
             // Assert
             QUnit.ok(httpRequest.isComplete(), "The request body is corresponding to the expected content length.");
         });
-
-        function buildHttpRequest(opts) {
-            opts = opts || {};
-
-            var typeOfLineBreak = opts.lineBreak || "\n";
-
-            var body = "<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' " +
-                "s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body>" +
-                "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
-                "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>";
-
-            return [
-                "POST /foo/bar HTTP/1.1",
-                "HOST: 192.168.1.1:58008",
-                "CONTENT-TYPE: text/xml",
-                "CONTENT-LENGTH: " + body.length,
-                "",
-                body
-            ].join(typeOfLineBreak);
-        }
     }
 );

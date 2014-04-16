@@ -25,7 +25,8 @@ define(function (require) {
             xmlResponses: require("./xmlResponses/main"),
             ssdp: require("./ssdp"),
             builders: {
-                httpHeaderBuilder: require("./httpHeaderBuilder")
+                httpHeaderBuilder: require("./httpHeaderBuilder"),
+                httpRequestBuilder: require("./httpRequestBuilder")
             }
         };
     }
