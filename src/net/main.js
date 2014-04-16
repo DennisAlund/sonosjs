@@ -22,6 +22,7 @@ define(function (require) {
 
     var xhr = require("net/xhr");
     var socket = require("net/socket");
+    var httpHeader = require("net/http/header");
 
     function extractAddressFromUrl(url) {
         return url.replace(/http[s]?:\/\/([^\/]+).*/g, "$1");
@@ -29,8 +30,13 @@ define(function (require) {
 
     return {
         socket: socket,
-        http: xhr.http(),
-        soap: xhr.soap(),
+        http: {
+            header: httpHeader
+        },
+        xhr: {
+            http: xhr.http(),
+            soap: xhr.soap()
+        },
         utils: {
             extractAddressFromUrl: extractAddressFromUrl
         }

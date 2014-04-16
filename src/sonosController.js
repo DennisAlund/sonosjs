@@ -145,7 +145,7 @@ define(function (require) {
                 }
 
                 var soapRequest = soap.media.positionInfo();
-                net.soap.request(
+                net.xhr.soap.request(
                     soapRequest.getUrl(device.ip, device.port),
                     soapRequest,
                     function soapMediaInfoCallback(xml) {
@@ -195,7 +195,7 @@ define(function (require) {
              */
             function requestDeviceDetails(location) {
                 console.debug("Making device details request for: %s", location);
-                net.http.get(
+                net.xhr.http.get(
                     location,
                     function xhrCallback(xml) {
                         models.device.fromXml(xml, function (device) {
