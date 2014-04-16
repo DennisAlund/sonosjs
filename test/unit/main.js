@@ -20,9 +20,17 @@
 define(function (require) {
     "use strict";
 
-    // No need to expose anything. Test files should not return any module environment
+    // Models
+    require("./models/device-tests");
+    require("./models/state-tests");
+
+    // Net
+    require("./net/http/header-tests");
+    require("./net/http/request-tests");
+
+    // UPnP
     require("./upnp/ssdp-tests");
+
+    // Utils
     require("./utils/xml-tests");
-    require("./models/main");
-    require("./net/main");
 });
