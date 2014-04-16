@@ -25,6 +25,7 @@ define(function (require) {
             xml: {
                 deviceDetails: {
                     bridge: require("text!./xml/deviceDetails.bridge.xml"),
+                    play1: require("text!./xml/deviceDetails.play1.xml"),
                     play5: require("text!./xml/deviceDetails.play5.xml")
                 },
                 notify: {
