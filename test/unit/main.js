@@ -22,6 +22,7 @@ define(function (require) {
 
     // Models
     require("./models/device-tests");
+    require("./models/media-tests");
     require("./models/state-tests");
 
     // Net

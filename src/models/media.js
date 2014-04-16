@@ -40,9 +40,12 @@ define(function (require) {
             var that = opts;
             that.type = mediaInfoTypes.MUSIC_FILE;
             that.albumArtUri = opts.albumArtUri || "";
+            that.originalTrackNumber = Number(opts.originalTrackNumber || 0);
+            that.creator = opts.creator || "";
             that.title = opts.title || "";
             that.artist = opts.artist || "";
             that.album = opts.album || "";
+            that.albumArtist = opts.albumArtist || "";
 
             return that;
         }
@@ -60,9 +63,12 @@ define(function (require) {
                 var queryBase = "/DIDL-Lite/item/";
                 var opts = {
                     albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
+                    originalTrackNumber: xmlParser.query(queryBase + "originalTrackNumber")[0].text,
+                    creator: xmlParser.query(queryBase + "creator")[0].text,
                     title: xmlParser.query(queryBase + "title")[0].text,
                     artist: xmlParser.query(queryBase + "creator")[0].text,
-                    album: xmlParser.query(queryBase + "album")[0].text
+                    album: xmlParser.query(queryBase + "album")[0].text,
+                    albumArtist: xmlParser.query(queryBase + "albumArtist")[0].text
                 };
 
                 callback(musicFileMetaData(opts));
@@ -81,8 +87,7 @@ define(function (require) {
 
             var that = opts;
             that.type = mediaInfoTypes.RADIO_STATION;
-            that.albumArtUri = opts.albumArtUri || "";
-            that.title = opts.title || "";
+            that.streamContent = opts.streamContent || "";
 
             return that;
         }
@@ -99,8 +104,7 @@ define(function (require) {
             xmlParser.parse(xmlString, function () {
                 var queryBase = "/DIDL-Lite/item/";
                 var opts = {
-                    albumArtUri: xmlParser.query(queryBase + "albumArtURI")[0].text,
-                    title: xmlParser.query(queryBase + "title")[0].text
+                    streamContent: xmlParser.query(queryBase + "streamContent")[0].text
                 };
 
                 callback(radioStationMetaData(opts));
@@ -119,12 +123,11 @@ define(function (require) {
             var that = {};
 
             that.id = opts.uri;
-            that.type = mediaInfoTypes.UNKNOWN;
             that.duration = opts.duration;
             that.currentTime = opts.currentTime;
             that.mediaType = opts.mediaType;
             that.metaData = opts.metaData;
-            that.playQueueNumber = opts.playQueueNumber;
+            that.playQueueNumber = Number(opts.playQueueNumber);
 
             return that;
         }
@@ -148,24 +151,11 @@ define(function (require) {
                 };
 
                 var mediaInfoObject = mediaInfo(opts);
-
-                var metaDataFactoryCallback = function (metaData) {
+                var metaDataXml = xmlParser.query(queryBase + "TrackMetaData")[0].text;
+                metaDataFromXml(mediaInfoObject, metaDataXml, function (metaData) {
                     mediaInfoObject.metaData = metaData;
                     callback(mediaInfoObject);
-                };
-
-                var metaDataXml = xmlParser.query(queryBase + "TrackMetaData")[0].text;
-
-                switch (mediaInfoObject.type) {
-                case mediaInfoTypes.MUSIC_FILE:
-                    musicFileMetaData.fromXml(metaDataXml, metaDataFactoryCallback);
-                    break;
-                case mediaInfoTypes.RADIO_STATION:
-                    radioStationMetaData.fromXml(metaDataXml, metaDataFactoryCallback);
-                    break;
-                default:
-                    metaDataFactoryCallback(null);
-                }
+                });
             });
         };
 
