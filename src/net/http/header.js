@@ -32,6 +32,7 @@ define(function () {
 
             var headers = opts.headers || [];
             var requestLine = opts.requestLine || "";
+            that.action = "GET";
             that.requestPath = "/";
 
             /**
@@ -52,9 +53,10 @@ define(function () {
             };
 
             (function init() {
-                var pathMatch = requestLine.match(/\w+\s+(.*)\sHTTP\/1\.1/i);
-                if (pathMatch && pathMatch.length === 2) {
-                    that.requestPath = pathMatch[1];
+                var pathMatch = requestLine.match(/(\w+)\s+(.*)\s+HTTP\/1\.1/i);
+                if (pathMatch && pathMatch.length === 3) {
+                    that.action = pathMatch[1];
+                    that.requestPath = pathMatch[2];
                 }
             }());
 
