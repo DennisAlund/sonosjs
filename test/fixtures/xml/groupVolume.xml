@@ -1,0 +1,11 @@
+<e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
+    <e:property>
+        <GroupVolume>18</GroupVolume>
+    </e:property>
+    <e:property>
+        <GroupMute>0</GroupMute>
+    </e:property>
+    <e:property>
+        <GroupVolumeChangeable>1</GroupVolumeChangeable>
+    </e:property>
+</e:propertyset>

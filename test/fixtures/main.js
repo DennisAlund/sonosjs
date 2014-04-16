@@ -21,9 +21,17 @@ define(function (require) {
         "use strict";
 
         return {
-            httpServerRequests: require("./httpServerRequests/main"),
-            xmlResponses: require("./xmlResponses/main"),
             ssdp: require("./ssdp"),
+            xml: {
+                deviceDetails: {
+                    bridge: require("text!./xml/deviceDetails.bridge.xml"),
+                    play5: require("text!./xml/deviceDetails.play5.xml")
+                },
+                notify: {
+                    groupVolume: require("text!./xml/groupVolume.xml"),
+                    lastChange: require("text!./xml/lastChange.xml")
+                }
+            },
             builders: {
                 httpHeaderBuilder: require("./httpHeaderBuilder"),
                 httpRequestBuilder: require("./httpRequestBuilder")

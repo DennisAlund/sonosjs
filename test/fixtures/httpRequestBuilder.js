@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var httpHeaderBuilder = require("../test/fixtures/httpHeaderBuilder");
+        var httpHeaderBuilder = require("./httpHeaderBuilder");
 
         function httpRequestBuilder() {
             var that = {};

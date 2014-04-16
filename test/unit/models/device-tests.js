@@ -30,7 +30,7 @@ define(function (require) {
             // added without support for it in the controller
 
             // Arrange
-            var testData = fixtures.xmlResponses.deviceDetails.bridge;
+            var testData = fixtures.xml.deviceDetails.bridge;
 
             // Act
             models.device.fromXml(testData, function (deviceObject) {
@@ -55,7 +55,7 @@ define(function (require) {
             // added without support for it in the controller
 
             // Arrange
-            var testData = fixtures.xmlResponses.deviceDetails.play5;
+            var testData = fixtures.xml.deviceDetails.play5;
 
             // Act
             models.device.fromXml(testData, function (deviceObject) {
@@ -82,7 +82,7 @@ define(function (require) {
 
         QUnit.asyncTest("Can manage device subscriptions", function () {
             // Arrange
-            var testData = fixtures.xmlResponses.deviceDetails.play5;
+            var testData = fixtures.xml.deviceDetails.play5;
 
             // Act
             models.device.fromXml(testData, function (deviceObject) {

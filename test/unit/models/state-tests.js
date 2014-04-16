@@ -22,13 +22,12 @@ define(function (require) {
 
         var models = require("models");
         var fixtures = require("fixtures");
-        var request = require("net/http/request");
 
         QUnit.module("Unit test: models/state");
 
         QUnit.asyncTest("Can create lastChange object from XML", function () {
             // Arrange
-            var testData = getPayload(fixtures.httpServerRequests.notify.lastChange);
+            var testData = fixtures.xml.notify.lastChange;
 
             // Act
             models.state.lastChange.fromXml(testData, function (lastChangeObject) {
@@ -45,7 +44,7 @@ define(function (require) {
 
         QUnit.asyncTest("Can create groupVolume object from XML", function () {
             // Arrange
-            var testData = getPayload(fixtures.httpServerRequests.notify.groupVolume);
+            var testData = fixtures.xml.notify.groupVolume;
 
             // Act
             models.state.groupVolume.fromXml(testData, function (groupVolume) {
@@ -60,22 +59,5 @@ define(function (require) {
                 QUnit.start();
             });
         });
-
-
-        // ----------------------------------------------------------------
-        // ----------------------------------------------------------------
-        // TEST HELPER METHODS
-
-        function getPayload(requestData) {
-            var httpRequest = request();
-            httpRequest.addData(requestData);
-            if (!httpRequest.isComplete()) {
-                QUnit.log(function () {
-                    console.error("Test data is not correct!");
-                });
-                return null;
-            }
-            return httpRequest.body;
-        }
     }
 );
