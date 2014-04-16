@@ -221,13 +221,13 @@ define(function (require) {
              * @param {string} info.data        SSDP discovery response data
              */
             function onDiscoveryResponse(info) {
-                var discoveryResponse = ssdp.discoveryResponse.fromData(info.data);
+                var discoveryResponse = ssdp.discovery.response.fromData(info.data);
                 if (!discoveryResponse) {
                     return;
                 }
 
                 // Discovery requests are usually sent in bursts. Multiple responses are expected. Only fetch data once.
-                if (deviceService.getDevice({id: discoveryResponse.getId()}) === null) {
+                if (deviceService.getDevice({id: discoveryResponse.id}) === null) {
                     requestDeviceDetails(discoveryResponse.location);
                 }
             }
@@ -241,7 +241,7 @@ define(function (require) {
              * @param {string} info.data        SSDP notification
              */
             function onMulticastNotification(info) {
-                var notification = ssdp.notification.fromData(info.data);
+                var notification = ssdp.discovery.notification.fromData(info.data);
 
                 if (!notification) {
                     return;
@@ -252,11 +252,11 @@ define(function (require) {
                 var device = deviceService.getDevice({id: notification.getId()});
 
                 switch (notification.advertisement) {
-                case ssdp.advertisementType.goodbye:
+                case ssdp.discovery.advertisement.goodbye:
                     deviceService.removeDevice(device);
                     break;
-                case ssdp.advertisementType.alive:
-                case ssdp.advertisementType.update:
+                case ssdp.discovery.advertisement.alive:
+                case ssdp.discovery.advertisement.update:
                     requestDeviceDetails(notification.location);
                     break;
                 default:
@@ -275,7 +275,7 @@ define(function (require) {
                 // UPnP protocol spec says that a client can wait up to the max wait time before having to answer
                 // Keeping socket open for some time to see if anything is stumbling in
                 net.socket.udp.open({consumer: onDiscoveryResponse}, function (socketInfo) {
-                    var discoveryMessage = ssdp.discoveryRequest({
+                    var discoveryMessage = ssdp.discovery.request({
                         targetScope: "urn:schemas-upnp-org:device:ZonePlayer:1",
                         maxWaitTime: 5
                     });

@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var shared = require("ssdp/shared");
+        var net = require("net");
         var env = require("utils/environment");
 
         /**
@@ -110,14 +110,14 @@ define(function (require) {
          * @returns {Object} SSDP subscriptionResponse object
          */
         subscriptionResponse.fromData = function (data) {
-            var opts = shared.parseHeader(data);
+            var header = net.http.header.fromData(data);
 
-            if (opts["REQUEST_HEADER"].search(/HTTP\/1.1\s+200\s+OK/i) !== 0) {
-                return null;
-            }
+            var opts = {
+                subscriptionId: header.getHeaderValue("SID")
+            };
 
-            var obj = subscriptionResponse(opts);
-            return obj.isValid() ? obj : null;
+            var response = subscriptionResponse(opts);
+            return (response.subscriptionId && response.subscriptionId.length > 0) ? response : null;
         };
 
         return {

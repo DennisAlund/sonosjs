@@ -11,7 +11,7 @@ define(function () {
             sax: {exports: "sax"}
         },
         packages: [
-            "models", "soap", "ssdp",
+            "models", "soap", "ssdp", "net",
             {name: "unitTests", location: "../test/unit"},
             {name: "integrationTests", location: "../test/integration"},
             {name: "fixtures", location: "../test/fixtures"}

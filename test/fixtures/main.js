@@ -21,7 +21,6 @@ define(function (require) {
         "use strict";
 
         return {
-            ssdp: require("./ssdp"),
             xml: {
                 deviceDetails: {
                     bridge: require("text!./xml/deviceDetails.bridge.xml"),

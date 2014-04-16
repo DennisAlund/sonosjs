@@ -20,15 +20,10 @@
 define(function (require) {
         "use strict";
 
-        var shared = require("ssdp/shared");
-
         return {
-            advertisementType: shared.advertisementType,
-            discoveryRequest: require("ssdp/discoveryRequest"),
-            discoveryResponse: require("ssdp/discoveryResponse"),
+            discovery: require("ssdp/discovery"),
             subscribe: require("ssdp/subscribe"),
-            unsubscribe: require("ssdp/unsubscribe"),
-            notification: require("ssdp/notification")
+            unsubscribe: require("ssdp/unsubscribe")
         };
     }
 );
