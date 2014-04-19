@@ -57,7 +57,7 @@ define(function (require) {
             QUnit.strictEqual(httpHeader.getHeaderValue("HOST"), "192.168.1.1:58008", "Valid header value is parsed.");
         });
 
-        QUnit.test("Header is either separated from body with empty line or the whole payload is header.", function () {
+        QUnit.test("Request header is either separated from body with empty line or the whole payload is header.", function () {
             // Arrange
             var testData = fixtures.builders.httpHeaderBuilder()
                 .withLineEndings("\n")
@@ -74,7 +74,7 @@ define(function (require) {
             QUnit.strictEqual(httpHeader.getHeaderValue("IGNORE"), null, "Ignoring things after empty line.");
         });
 
-        QUnit.test("Can read valid header values and they are case insensitive", function () {
+        QUnit.test("Can read valid request header values and they are case insensitive", function () {
             // Arrange
             var testData = fixtures.builders.httpHeaderBuilder()
                 .withRequestLine("POST /foo/bar HTTP/1.1")
@@ -87,11 +87,29 @@ define(function (require) {
             var httpHeader = header.fromData(testData);
 
             // Assert
+            QUnit.strictEqual(httpHeader.action, "POST", "The request action could be read.");
             QUnit.strictEqual(httpHeader.requestPath, "/foo/bar", "The request path could be read.");
             QUnit.strictEqual(httpHeader.getHeaderValue("HOST"), "192.168.1.1:58008", "HOST value is correct.");
             QUnit.strictEqual(httpHeader.getHeaderValue("content-type"), "text/xml", "CONTENT-TYPE value is correct.");
             QUnit.strictEqual(httpHeader.getHeaderValue("content-LENGTH"), "1234", "CONTENT-LENGTH value is correct.");
-            QUnit.strictEqual(httpHeader.getHeaderValue("DOES-NOT-EXIST"), null, "Unknown key returns NULL.");
+        });
+
+        QUnit.test("Can read response header values and they are case insensitive", function () {
+            // Arrange
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("HTTP/1.1 418 I'm a teapot")
+                .withKeyValuePair("CONTENT-TYPE", "coffee")
+                .withKeyValuePair("CONTENT-LENGTH", "0")
+                .build();
+
+            // Act
+            var httpHeader = header.fromData(testData);
+
+            // Assert
+            QUnit.strictEqual(httpHeader.code, 418, "The response code could be read.");
+            QUnit.strictEqual(httpHeader.statusMessage, "I'm a teapot", "The response status message could be read.");
+            QUnit.strictEqual(httpHeader.getHeaderValue("content-type"), "coffee", "CONTENT-TYPE value is correct.");
+            QUnit.strictEqual(httpHeader.getHeaderValue("content-LENGTH"), "0", "CONTENT-LENGTH value is correct.");
         });
     }
 );

@@ -23,7 +23,10 @@ define(function () {
         /**
          * Defines a structured HTTP header object that allows you to query for header values.
          *
-         * @param {object}  opts    Object initialization configuration
+         * @param {object}      opts                    Object initialization configuration
+         * @param {object[]}    [opts.headers]          Array of key value pair objects: {key: "", value: ""}
+         * @param {string}      [opts.responseLine]     First line of the HTTP response (only if it is a HTTP response header)
+         * @param {string}      [opts.requestLine]      First line of the HTTP request (only if it is a HTTP request header)
          * @returns {object} HTTP header object
          */
         function httpHeader(opts) {
@@ -31,9 +34,6 @@ define(function () {
             var that = {};
 
             var headers = opts.headers || [];
-            var requestLine = opts.requestLine || "";
-            that.action = "GET";
-            that.requestPath = "/";
 
             /**
              * Get the header value for a specific header key.
@@ -53,10 +53,19 @@ define(function () {
             };
 
             (function init() {
-                var pathMatch = requestLine.match(/(\w+)\s+(.*)\s+HTTP\/1\.1/i);
-                if (pathMatch && pathMatch.length === 3) {
-                    that.action = pathMatch[1];
-                    that.requestPath = pathMatch[2];
+                if (opts.responseLine) {
+                    var responseMatch = opts.responseLine.match(/HTTP\/1\.1\s+(\d+)\s+(.*)/i);
+                    if (responseMatch && responseMatch.length === 3) {
+                        that.code = Number(responseMatch[1]);
+                        that.statusMessage = responseMatch[2].trim();
+                    }
+                }
+                else if (opts.requestLine) {
+                    var requestMatch = opts.requestLine.match(/(\w+)\s+(.*)\s+HTTP\/1\.1/i);
+                    if (requestMatch && requestMatch.length === 3) {
+                        that.action = requestMatch[1];
+                        that.requestPath = requestMatch[2];
+                    }
                 }
             }());
 
@@ -79,27 +88,28 @@ define(function () {
                 return null;
             }
 
-            var requestLine = "";
-            var headers = [];
+            var opts = {headers: []};
             dataParts[0].split("\n").forEach(function (headerLine, lineNumber) {
                 headerLine = headerLine.trim();
-                if (lineNumber === 0 && headerLine.indexOf("HTTP/1.1") >= 0) {
-                    requestLine = headerLine;
+                if (lineNumber === 0) {
+                    if (headerLine.indexOf("HTTP/1.1") === 0) {
+                        opts.responseLine = headerLine;
+                    }
+                    else {
+                        opts.requestLine = headerLine;
+                    }
                 }
 
                 else if (lineNumber > 0 && headerLine.length > 0) {
                     var keyEnd = headerLine.indexOf(":");
-                    headers.push({
+                    opts.headers.push({
                         key: headerLine.substr(0, keyEnd).toUpperCase(),
                         value: headerLine.substr(keyEnd + 1).trim()
                     });
                 }
             });
 
-            return httpHeader({
-                requestLine: requestLine,
-                headers: headers
-            });
+            return httpHeader(opts);
         };
 
         return httpHeader;
