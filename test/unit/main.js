@@ -28,6 +28,7 @@ define(function (require) {
     // Net
     require("./net/http/header-tests");
     require("./net/http/request-tests");
+    require("./net/http/response-tests");
 
     // UPnP
     require("./upnp/ssdp-tests");
