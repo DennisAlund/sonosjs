@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var httpHeader = require("net/http/header");
+        var httpHeader = require("./header");
 
         /**
          * A HTTP request as in: a request to the local web server.

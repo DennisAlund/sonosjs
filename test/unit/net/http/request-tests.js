@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         var fixtures = require("fixtures");
-        var request = require("net/http/request");
+        var net = require("net");
 
         QUnit.module("Unit test: net/http/request");
 
@@ -34,7 +34,7 @@ define(function (require) {
                     "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
                     "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
                 .build();
-            var httpRequest = request();
+            var httpRequest = net.http.request();
 
             // Act
             httpRequest.addData(testData);
@@ -53,7 +53,7 @@ define(function (require) {
                     "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>" +
                     "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
                 .build();
-            var httpRequest = request();
+            var httpRequest = net.http.request();
 
             // Act
             httpRequest.addData(testData);
@@ -72,7 +72,7 @@ define(function (require) {
                     "<InstanceID>0</InstanceID><Speed>1</Speed></u:Play></s:Body></s:Envelope>")
                 .build();
 
-            var httpRequest = request();
+            var httpRequest = net.http.request();
 
             // Act
             httpRequest.addData(testData.slice(0, -50));

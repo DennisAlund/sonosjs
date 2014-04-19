@@ -21,7 +21,7 @@ define(function (require) {
         "use strict";
 
         var fixtures = require("fixtures");
-        var header = require("net/http/header");
+        var net = require("net");
 
         QUnit.module("Unit test: net/http/header");
 
@@ -34,7 +34,7 @@ define(function (require) {
                 .build();
 
             // Act
-            var httpHeader = header.fromData(testData);
+            var httpHeader = net.http.header.fromData(testData);
 
             // Assert
             QUnit.strictEqual(httpHeader.requestPath, "/foo/bar", "The request path could be read.");
@@ -50,7 +50,7 @@ define(function (require) {
                 .build();
 
             // Act
-            var httpHeader = header.fromData(testData);
+            var httpHeader = net.http.header.fromData(testData);
 
             // Assert
             QUnit.strictEqual(httpHeader.requestPath, "/foo/bar", "The request path could be read.");
@@ -66,7 +66,7 @@ define(function (require) {
                 .build();
 
             // Act
-            var httpHeader = header.fromData(testData + "\n\nIGNORE: THIS");
+            var httpHeader = net.http.header.fromData(testData + "\n\nIGNORE: THIS");
 
             // Assert
             QUnit.strictEqual(httpHeader.requestPath, "/foo/bar", "The request path could be read.");
@@ -84,7 +84,7 @@ define(function (require) {
                 .build();
 
             // Act
-            var httpHeader = header.fromData(testData);
+            var httpHeader = net.http.header.fromData(testData);
 
             // Assert
             QUnit.strictEqual(httpHeader.action, "POST", "The request action could be read.");
@@ -103,7 +103,7 @@ define(function (require) {
                 .build();
 
             // Act
-            var httpHeader = header.fromData(testData);
+            var httpHeader = net.http.header.fromData(testData);
 
             // Assert
             QUnit.strictEqual(httpHeader.code, 418, "The response code could be read.");
