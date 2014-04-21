@@ -38,7 +38,7 @@ define(function (require) {
         function subscriptionRequest(opts) {
             opts = opts || {};
 
-            var that = {};
+            var that = net.http.header();
 
             var servicePath = opts.servicePath || "";
             var remoteIp = opts.remoteIp || "0.0.0.0";
@@ -47,29 +47,13 @@ define(function (require) {
             var localPort = opts.localPort || 1400;
             var userAgent = opts.userAgent || env.USER_AGENT;
 
-            /**
-             * Serializes the object into a SSDP subscription request on the form
-             *
-             *      SUBSCRIBE /ZoneGroupTopology/Event HTTP/1.1
-             *      HOST: 192.168.1.63:1400
-             *      USER-AGENT: OS/version UPnP/1.1 product/version
-             *      CALLBACK: <http://192.168.1.12:3400/notify>
-             *      NT: upnp:event
-             *      TIMEOUT: Second-3600
-             *
-             * @returns {string} SSDP request
-             */
-            that.toData = function () {
-                return [
-                        "SUBSCRIBE " + servicePath + " HTTP/1.1",
-                        "HOST: " + remoteIp + ":" + remotePort,
-                        "USER-AGENT: " + userAgent,
-                        "CALLBACK: <http://" + localIp + ":" + localPort + "/notify>",
-                        "NT: upnp:event",
-                        "TIMEOUT: Second-3600",
-                        "\r\n"
-                    ].join("\r\n");
-            };
+            that.action = "SUBSCRIBE";
+            that.requestPath = servicePath;
+            that.setHeaderValue("HOST", remoteIp + ":" + remotePort);
+            that.setHeaderValue("USER-AGENT", userAgent);
+            that.setHeaderValue("CALLBACK", "<http://" + localIp + ":" + localPort + "/notify>");
+            that.setHeaderValue("NT", "upnp:event");
+            that.setHeaderValue("TIMEOUT", "Second-3600");
 
             return that;
         }

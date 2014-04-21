@@ -39,42 +39,19 @@ define(function (require) {
         function discoveryRequest(opts) {
             opts = opts || {};
 
-            var that = {};
+            var that = net.http.header();
 
             that.targetScope = opts.targetScope || "";
             that.maxWaitTime = opts.maxWaitTime || 5;
             that.userAgent = opts.userAgent || env.USER_AGENT;
 
-            that.isValid = function () {
-                return Object.keys(that).every(function (key) {
-                    return that[key] ? true : false;
-                });
-            };
-
-            /**
-             * Serializes the object into a SSDP discovery request on the form
-             *
-             *    M-SEARCH * HTTP/1.1
-             *    HOST: 239.255.255.250:1900
-             *    MAN: \"ssdp:discover\"
-             *    MX: 5
-             *    ST: urn:schemas-upnp-org:device:ZonePlayer:1
-             *    USER-AGENT: OS/version UPnP/1.1 product/version
-             *
-             *
-             * @returns {string} SSDP request
-             */
-            that.toData = function () {
-                return [
-                    "M-SEARCH * HTTP/1.1",
-                    "HOST: 239.255.255.250:1900",
-                    "MAN: \"" + advertisementType.search + "\"",
-                    "MX: " + that.maxWaitTime,
-                    "ST: " + that.targetScope,
-                    "USER-AGENT: " + that.userAgent,
-                    "\r\n"
-                ].join("\r\n");
-            };
+            that.action = "M-SEARCH";
+            that.requestPath = "*";
+            that.setHeaderValue("HOST", "239.255.255.250:1900");
+            that.setHeaderValue("MAN", "\"" + advertisementType.search + "\"");
+            that.setHeaderValue("MX", that.maxWaitTime);
+            that.setHeaderValue("ST", that.targetScope);
+            that.setHeaderValue("USER-AGENT", that.userAgent);
 
             return that;
         }

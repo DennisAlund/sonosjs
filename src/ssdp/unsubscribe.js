@@ -20,10 +20,11 @@
 define(function (require) {
         "use strict";
 
+        var net = require("net");
         var env = require("utils/environment");
 
         /**
-         * Request to unsubscribe from receiving any more UPnP events from a media device
+         * Request to un-subscribe from receiving any more UPnP events from a media device
          *
          * @param {Object}      opts
          * @param {string}      opts.servicePath         Event path on which the TCP event server is responding to
@@ -36,7 +37,7 @@ define(function (require) {
         function unSubscriptionRequest(opts) {
             opts = opts || {};
 
-            var that = {};
+            var that = net.http.header();
 
             var servicePath = opts.servicePath || "";
             var remoteIp = opts.remoteIp || "0.0.0.0";
@@ -44,25 +45,12 @@ define(function (require) {
             var userAgent = opts.userAgent || env.USER_AGENT;
             var subscriptionId = opts.subscriptionId || "";
 
-            /**
-             * Serializes the object into a SSDP UNSUBSCRIBE request on the form
-             *
-             *      UNSUBSCRIBE /ZoneGroupTopology/Event HTTP/1.1
-             *      HOST: 192.168.1.63:1400
-             *      USER-AGENT: OS/version UPnP/1.1 product/version
-             *      SID: uuid:RINCON_000E58C8C45801400_sub0000001630
-             *
-             * @returns {string} SSDP request
-             */
-            that.toData = function () {
-                return [
-                        "UNSUBSCRIBE " + servicePath + " HTTP/1.1",
-                        "HOST: " + remoteIp + ":" + remotePort,
-                        "USER-AGENT: " + userAgent,
-                        "SID: " + subscriptionId,
-                        "\r\n"
-                    ].join("\r\n");
-            };
+            that.action = "UNSUBSCRIBE";
+            that.requestPath = servicePath;
+            that.setHeaderValue("HOST", remoteIp + ":" + remotePort);
+            that.setHeaderValue("USER-AGENT", userAgent);
+            that.setHeaderValue("SID", subscriptionId);
+
 
             return that;
         }
