@@ -52,6 +52,41 @@ define(function () {
                 return value;
             };
 
+            that.setHeaderValue = function (key, value) {
+                var keyExists = false;
+                headers.forEach(function (keyValuePair) {
+                    if (keyValuePair.key === key) {
+                        keyValuePair.value = value;
+                        keyExists = true;
+                    }
+                });
+
+                if (!keyExists) {
+                    headers.push({key: key, value: value});
+                }
+            };
+
+
+            that.toData = function () {
+                var data = [];
+                if (that.code && that.statusMessage) {
+                    data.push("HTTP/1.1 " + that.code + " " + that.statusMessage);
+                }
+                else if (that.action && that.requestPath) {
+                    data.push(that.action + " " + that.requestPath + " HTTP/1.1");
+                }
+                else {
+                    return "";
+                }
+
+                headers.forEach(function (headerEntry) {
+                    data.push(headerEntry.key.toUpperCase() + ": " + headerEntry.value);
+                });
+
+                return data.join("\n");
+            };
+
+
             (function init() {
                 if (opts.responseLine) {
                     var responseMatch = opts.responseLine.match(/HTTP\/1\.1\s+(\d+)\s+(.*)/i);
