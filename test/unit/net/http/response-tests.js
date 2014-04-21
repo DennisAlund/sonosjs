@@ -30,7 +30,7 @@ define(function (require) {
 
             // Act
             var http200Response = net.http.response.http200();
-            http200Response.setBody(responseBody);
+            http200Response.body = responseBody;
 
             // Assert
             var parsedResponseHeader = net.http.header.fromData(http200Response.toData());

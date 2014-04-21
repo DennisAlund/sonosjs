@@ -17,63 +17,28 @@
  *
  * ------------------------------------------------------------------------- */
 
-define(function () {
+define(function (require) {
         "use strict";
 
-        function httpResponse(opts, my) {
-            my = my || {};
+        var httpRequest = require("net/http/request");
 
-            var that = {};
+        function httpResponse(opts) {
+            opts = opts || {};
+            var that = httpRequest(opts);
 
-            var httpStatus = "";
-            var headers = {};
-            var httpStatusCode = 0;
-
-            my.body = opts.body || "";
-
-            that.getCode = function () {
-                return httpStatusCode;
-            };
-
-            that.setStatus = function (code, description) {
-                httpStatusCode = Number(code);
-                httpStatus = "HTTP/1.1 " + httpStatusCode + " " + description;
+            that.setStatus = function (code, status) {
+                that.headers.code = Number(code);
+                that.headers.statusMessage = status;
             };
 
             that.setContentType = function (contentType) {
-                that.setHeader("CONTENT-TYPE", contentType + "; charset='utf-8'");
+                that.headers.setHeaderValue("CONTENT-TYPE", contentType + "; charset='utf-8'");
             };
-
-            that.setHeader = function (key, value) {
-                headers[key] = value;
-            };
-
-            that.setBody = function (body) {
-                my.body = body || "";
-            };
-
-            that.toData = function () {
-                that.setHeader("CONTENT-LENGTH", my.body.length);
-
-                var pieces = [httpStatus];
-                for (var key in headers) {
-                    if (headers.hasOwnProperty(key)) {
-                        pieces.push(key + ": " + headers[key]);
-                    }
-                }
-                pieces.push("\n");
-                pieces.push(my.body);
-
-                return pieces.join("\n");
-            };
-
 
             return that;
         }
 
         function http200(opts) {
-            opts = opts || {};
-
             var that = httpResponse(opts);
 
             (function init() {
@@ -93,11 +58,11 @@ define(function () {
             (function init() {
                 that.setStatus(404, "Not Found");
                 that.setContentType("text/html");
-                that.setBody([
+                that.body = [
                     "<html><body><h1>",
                     "404 - That page where the wave finally broke and rolled back",
                     "</h1></body></html>"
-                ].join("\n"));
+                ].join("\n");
             }());
 
             return that;

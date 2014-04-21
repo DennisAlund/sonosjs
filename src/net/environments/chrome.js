@@ -549,7 +549,7 @@ define(function (require) {
                         console.warn("Failed to send HTTP response.");
                     }
 
-                    console.debug("HTTP server '%d' => HTTP%d to client '%d'", serverSocket, response.getCode(), clientSocket);
+                    console.debug("HTTP server '%d' => HTTP%d to client '%d'", serverSocket, response.headers.code, clientSocket);
                     removeClientConnection(clientSocket);
                 });
             }
