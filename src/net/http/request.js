@@ -20,7 +20,7 @@
 define(function (require) {
         "use strict";
 
-        var httpHeader = require("./header");
+        var httpHeader = require("net/http/header");
 
         /**
          * A HTTP request as in: a request to the local web server.
@@ -41,7 +41,7 @@ define(function (require) {
 
             that.serverSocketId = Number(opts.serverSocketId || 0);
             that.remoteIp = opts.remoteIp || "0.0.0.0";
-            that.headers = null;
+            that.headers = httpHeader();
             that.body = "";
 
             /**
@@ -56,7 +56,7 @@ define(function (require) {
                 var requestData = data.replace(/\r\n/g, "\n"); // Normalize line endings
                 var dataParts = requestData.split("\n\n"); // Header and body is divided by a empty line
 
-                if (!that.headers) {
+                if (that.headers.isEmpty()) {
                     that.headers = httpHeader.fromData(dataParts.shift());
                     that.body = dataParts.join("\n\n").trim();
                     expectedLength = Number(that.headers.getHeaderValue("CONTENT-LENGTH"));
@@ -74,6 +74,15 @@ define(function (require) {
              */
             that.isComplete = function () {
                 return expectedLength === that.body.length;
+            };
+
+
+            that.toData = function () {
+                that.headers.setHeaderValue("CONTENT-LENGTH", that.body.length);
+                var data = [that.headers.toData()];
+                data.push("\n");
+                data.push(that.body);
+                return data.join("\n");
             };
 
             return that;

@@ -35,6 +35,11 @@ define(function () {
 
             var headers = opts.headers || [];
 
+
+            that.isEmpty = function () {
+                return headers.length === 0;
+            };
+
             /**
              * Get the header value for a specific header key.
              *
