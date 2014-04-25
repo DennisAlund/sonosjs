@@ -21,6 +21,7 @@ define(function (require) {
         "use strict";
 
         var net = require("net");
+        var models = require("models");
         var getPositionInfoXml = require("text!soap/templates/getPositionInfo.xml");
         var playXml = require("text!soap/templates/play.xml");
         var pauseXml = require("text!soap/templates/pause.xml");
@@ -123,8 +124,13 @@ define(function (require) {
             that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Seek");
             that.body = seekXml;
 
+            /**
+             * Set playback offset into the music stream in seconds.
+             *
+             * @param {number}  seekSeconds     A number between 0 and the length of the stream
+             */
             that.setSeconds = function (seekSeconds) {
-                seekSeconds = seekSeconds || 0;
+                seekSeconds = Number(seekSeconds) || 0;
                 var hours = Math.floor(seekSeconds / 3600);
                 var minutes = Math.floor((seekSeconds % 3600) / 60);
                 var seconds = seekSeconds % 60;
@@ -146,7 +152,19 @@ define(function (require) {
             that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetVolume");
             that.body = setVolumeXml;
 
+            /**
+             * Set level of volume on the device.
+             * @param {number}  volume  A number between 0..100
+             */
             that.setDesiredVolume = function (volume) {
+                volume = Number(volume) || 0;
+                if (volume < 0) {
+                    volume = 0;
+                }
+                else if (volume > 100) {
+                    volume = 100;
+                }
+
                 that.body = that.body.replace(/<DesiredVolume>\s*\d+\s*<\/DesiredVolume>/,
                         "<DesiredVolume>" + volume + "</DesiredVolume>");
             };
@@ -166,6 +184,11 @@ define(function (require) {
             that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetMute");
             that.body = setMuteXml;
 
+            /**
+             * Set mute flag on or off.
+             *
+             * @param {boolean} isMuted     True if the device should be muted
+             */
             that.setDesiredMute = function (isMuted) {
                 var muteFlag = isMuted === true ? 1 : 0;
                 that.body = that.body.replace(/<DesiredMute>\s*\d+\s*<\/DesiredMute>/,
@@ -187,9 +210,32 @@ define(function (require) {
             that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode");
             that.body = setPlayModeXml;
 
-            that.setNewPlayMode = function (playMode) {
+            /**
+             * Sets the play mode in the SOAP body
+             *
+             * @param {PlayMode}    playMode
+             * @param {RepeatMode}  repeatMode
+             */
+            that.setNewPlayMode = function (playMode, repeatMode) {
+                var playModeString;
+                if (playMode === models.state.playMode.ORDERED &&
+                    repeatMode === models.state.repeatMode.ALL) {
+                    playModeString = "REPEAT_ALL";
+                }
+                else if (playMode === models.state.playMode.SHUFFLE &&
+                    repeatMode === models.state.repeatMode.ALL) {
+                    playModeString = "SHUFFLE";
+                }
+                else if (playMode === models.state.playMode.SHUFFLE &&
+                    repeatMode === models.state.repeatMode.OFF) {
+                    playModeString = "SHUFFLE_NOREPEAT";
+                }
+                else {
+                    playModeString = "NORMAL";
+                }
+
                 that.body = that.body.replace(/<NewPlayMode>\s*\w+\s*<\/NewPlayMode>/,
-                        "<NewPlayMode>" + playMode + "</NewPlayMode>");
+                        "<NewPlayMode>" + playModeString + "</NewPlayMode>");
             };
 
             return that;
