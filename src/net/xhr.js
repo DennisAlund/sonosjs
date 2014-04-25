@@ -22,6 +22,11 @@ define(function (require) {
 
         var convert = require("net/convert");
 
+        var unsafeHeaders = ["ACCEPT-CHARSET", "ACCEPT-ENCODING", "ACCESS-CONTROL-REQUEST-HEADERS",
+            "ACCESS-CONTROL-REQUEST-METHOD", "CONNECTION", "CONTENT-LENGTH", "CONTENT-TRANSFER-ENCODING", "COOKIE",
+            "COOKIE2", "DATE", "EXPECT", "HOST", "KEEP-ALIVE", "ORIGIN", "REFERER", "TE", "TRAILER", "TRANSFER-ENCODING",
+            "UPGRADE", "USER-AGENT", "VIA"];
+
         function http() {
             var that = {};
 
@@ -29,22 +34,22 @@ define(function (require) {
              * Make an asynchronous HTTP GET request.
              *
              * @param {string}          url         Destination URL
-             * @param {object|function} [options]   Optional options
-             * @param {function}        [callback]  Optional success callback
+             * @param {object|function} [options]
+             * @param {function}        [callback]
              */
             that.get = function (url, options, callback) {
-                httpRequest(url, "GET", options, callback);
+                httpRequest("GET", url, options, callback);
             };
 
             /**
              * Make an asynchronous HTTP POST request.
              *
              * @param {string}          url         Destination URL
-             * @param {object|function} [options]   Optional options
-             * @param {function}        [callback]  Optional success callback
+             * @param {object|function} [options]
+             * @param {function}        [callback]
              */
             that.post = function (url, options, callback) {
-                httpRequest(url, "POST", options, callback);
+                httpRequest("POST", url, options, callback);
             };
 
             return that;
@@ -57,64 +62,84 @@ define(function (require) {
             /**
              * Make a asynchronous SOAP request.
              *
-             * @param {string}          url         Destination URL
-             * @param {object}          soapMessage SOAP message
-             * @param {object|function} [options]   Optional options
-             * @param {function}        [callback]  Optional success callback
+             * @param {object}      soapMessage     SOAP message
+             * @param {function}    [callback]      Success callback
              */
-            that.request = function (url, soapMessage, options, callback) {
-                options = typeof(arguments[2]) === "object" ? arguments[2] : {};
+            that.request = function (ip, port, soapMessage, callback) {
+                var url = "http://" + ip + ":" + port + soapMessage.serviceUri;
+                var options = {
+                    body: convert.toUint8Array(soapMessage.body),
+                    requestHeaders: []
+                };
 
-                options["body"] = convert.toUint8Array(soapMessage.getPayload());
-                options["requestHeaders"] = soapMessage.getHttpHeaders();
+                options.requestHeaders.push({key: "CONTENT-TYPE", value: "text/xml; charset=\"utf-8\""});
+                options.requestHeaders.push({key: "SOAPACTION", value: soapMessage.headers.getHeaderValue("SOAPACTION")});
 
-                httpRequest(url, "POST", options, callback);
+                httpRequest("POST", url, options, callback);
             };
 
             return that;
         }
 
-        function httpRequest(url, action, options, callback) {
+        /**
+         * Private method for building the XHR request. This is done the same way for both SOAP and regular HTTP
+         * requests.
+         *
+         * @param {string}      action
+         * @param {string}      url
+         * @param {object}      options
+         * @param {function}    callback
+         */
+        function httpRequest(action, url, options, callback) {
             callback = typeof(arguments[2]) === "function" ? arguments[2] : arguments[3];
             options = typeof(arguments[2]) === "object" ? arguments[2] : {};
-            action = action || "GET";
 
             var requestHeaders = options.requestHeaders || [];
             var responseType = options.responseType || "text";
-            var xhrResponseProperty = responseType === "text" ? "responseText" : "response";
-            var body = options.body || null;
+            var body = options.body || undefined;
 
             var xhr = new XMLHttpRequest();
             xhr.open(action, url, true);
 
-            requestHeaders.forEach(function (requestHeader) {
-                xhr.setRequestHeader(requestHeader.header, requestHeader.value);
-            });
+            setSafeRequestHeaders(xhr, requestHeaders);
 
             xhr.responseType = responseType;
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     if (callback) {
-                        console.debug("Got response on request: %s", url);
-                        callback(xhr[xhrResponseProperty]);
+                        console.debug("Got HTTP 200 response on request: %s", url);
+                        var responseContent = xhr[getXhrResponseProperty(responseType)];
+                        callback(responseContent);
                     }
                 }
 
                 else if (xhr.status !== 200) {
-                    console.error("Got status code 'HTTP %d' from %s", xhr.status, url);
+                    console.warn("Got status code 'HTTP %d' from %s", xhr.status, url);
                 }
             };
 
             console.debug("Making XHR request: %s", url);
-
-            if (body === null) {
-                xhr.send();
-            }
-            else {
-                xhr.send(body);
-            }
+            xhr.send(body);
         }
 
+
+        function getXhrResponseProperty(responseType) {
+            return responseType === "text" ? "responseText" : "response";
+        }
+
+        /**
+         * Filter out headers that can not be set by XHR request
+         *
+         * @param {XMLHttpRequest}  xhr
+         * @param {object[]}        requestHeaders
+         */
+        function setSafeRequestHeaders(xhr, requestHeaders) {
+            requestHeaders.forEach(function (requestHeader) {
+                if (unsafeHeaders.indexOf(requestHeader.key) < 0) {
+                    xhr.setRequestHeader(requestHeader.key, requestHeader.value);
+                }
+            });
+        }
 
         return {
             http: http,

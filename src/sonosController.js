@@ -145,9 +145,7 @@ define(function (require) {
                 }
 
                 var soapRequest = soap.media.positionInfo();
-                net.xhr.soap.request(
-                    soapRequest.getUrl(device.ip, device.port),
-                    soapRequest,
+                net.xhr.soap.request(device.ip, device.port, soapRequest,
                     function soapMediaInfoCallback(xml) {
                         models.media.info.fromXml(xml, function (mediaInfo) {
                             if (mediaInfo) {
@@ -249,7 +247,7 @@ define(function (require) {
 
                 console.debug("Got a notification message: %s", notification.advertisement);
 
-                var device = deviceService.getDevice({id: notification.getId()});
+                var device = deviceService.getDevice({id: notification.id});
 
                 switch (notification.advertisement) {
                 case ssdp.discovery.advertisement.goodbye:
