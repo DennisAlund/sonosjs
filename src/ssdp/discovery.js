@@ -65,7 +65,8 @@ define(function (require) {
          * @param {object}          opts                        Object initialization options
          * @param {string}          opts.uniqueServiceName
          * @param {string}          opts.location               URL to XML containing detailed device information
-         * @param {string}          opts.targetScope            Search scope (e.g. root or fully specified service "urn:schemas-upnp-org:device:ZonePlayer:1")
+         * @param {string}          opts.targetScope            Search scope (e.g. root or fully specified service
+         *                                                      "urn:schemas-upnp-org:device:ZonePlayer:1")
          * @param {string|number}   opts.bootId                 Boot sequence number
          * @param {string}          opts.householdToken
          * @param {string|number}   opts.keepAlive              Suggested amount of time this device can be cached
