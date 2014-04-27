@@ -40,13 +40,13 @@ define(function (require) {
          * Play state for the device.
          *
          * @readonly
-         * @enum {number|string}
+         * @enum {string}
          * @typedef {object} PlayState
          */
         var playStateType = {
-            STOPPED: "%%E:STOPPED%%",
-            PAUSED: "%%E:PAUSED%%",
-            PLAYING: "%%E:PLAYING%%"
+            STOPPED: "STOPPED",
+            PAUSED: "PAUSED",
+            PLAYING: "PLAYING"
         };
 
         /**
@@ -54,24 +54,24 @@ define(function (require) {
          * randomly (SHUFFLE).
          *
          * @readonly
-         * @enum {number|string}
+         * @enum {string}
          * @typedef {object} PlayMode
          */
         var playModeType = {
-            ORDERED: "%%E:ORDERED%%",
-            SHUFFLE: "%%E:SHUFFLE%%"
+            ORDERED: "ORDERED",
+            SHUFFLE: "SHUFFLE"
         };
 
         /**
          * Repeat mode for the play queue.
          *
          * @readonly
-         * @enum {number|string}
+         * @enum {string}
          * @typedef {object} RepeatMode
          */
         var repeatModeType = {
-            OFF: "%%E:NO_REPEAT%%",
-            ALL: "%%E:REPEAT_ALL%%"
+            OFF: "NO_REPEAT",
+            ALL: "REPEAT_ALL"
         };
 
         /**
