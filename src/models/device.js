@@ -30,11 +30,14 @@ define(function (require) {
          * @param {number}      opts.speakerSize    Positive number for a SONOS speaker and negative for bridge etc.
          * @param {string}      opts.groupName      Name of the group that it belongs to (referred to as "room" by SONOS)
          * @param {string[]}    opts.services       List of supported event services
-         * @returns {object}    Device information
+         * @returns {device}    Device information
          */
         function device(opts) {
             opts = opts || {};
 
+            /**
+             * @typedef {object} device
+             */
             var that = {};
             var registeredServices = {};
 

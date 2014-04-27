@@ -51,6 +51,10 @@ define(function (require) {
                 return deviceIndex >= 0 ? devices[deviceIndex] : null;
             };
 
+            /**
+             *
+             * @returns {device[]}
+             */
             that.getDevices = function () {
                 return devices.slice();
             };
