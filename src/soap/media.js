@@ -134,8 +134,13 @@ define(function (require) {
                 var hours = Math.floor(seekSeconds / 3600);
                 var minutes = Math.floor((seekSeconds % 3600) / 60);
                 var seconds = seekSeconds % 60;
-                that.body = that.body.replace(/\d+:\d+:\d+/, [hours, minutes, seconds].join(":"));
+                // Must be on format hh:mm:ss (one leading zero)
+                that.body = that.body.replace(/\d+:\d+:\d+/, [hours, minutes, seconds].map(zeroPad).join(":"));
             };
+
+            function zeroPad(number) {
+                return (number < 10) ? "0" + number : number;
+            }
 
             return that;
         }
