@@ -123,7 +123,8 @@ module.exports = function (grunt) {
                 optimize: buildOptions.debug ? "none" : "uglify2",
                 paths: {
                     almond: "../lib/almond/almond",
-                    sax: "../lib/sax/lib/sax"
+                    sax: "../lib/sax/lib/sax",
+                    text: "../lib/requirejs-text/text"
                 },
                 shim: {
                     sax: {exports: "sax"}

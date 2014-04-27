@@ -22,6 +22,11 @@ define(function (require) {
 
         var xml = require("utils/xml");
 
+        /**
+         * Classification of playable media on SONOS device
+         *
+         * @typedef {object} MediaInfoType
+         */
         var mediaInfoTypes = {
             UNKNOWN: "MEDIA_TYPE_UNKNOWN",
             MUSIC_FILE: "MEDIA_TYPE_MUSIC_FILE",

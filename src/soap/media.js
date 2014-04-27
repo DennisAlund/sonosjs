@@ -20,22 +20,23 @@
 define(function (require) {
         "use strict";
 
-        var soapBase = require("./base");
+        var net = require("net");
+        var models = require("models");
+        var getPositionInfoXml = require("text!soap/templates/getPositionInfo.xml");
+        var playXml = require("text!soap/templates/play.xml");
+        var pauseXml = require("text!soap/templates/pause.xml");
+        var nextTrackXml = require("text!soap/templates/nextTrack.xml");
+        var seekXml = require("text!soap/templates/seek.xml");
+        var setVolumeXml = require("text!soap/templates/setVolume.xml");
+        var setMuteXml = require("text!soap/templates/setMute.xml");
+        var setPlayModeXml = require("text!soap/templates/setPlayMode.xml");
 
-        function mediaBase(opts, my) {
+
+        function mediaBase(opts) {
             opts = opts || {};
-            my = my || {};
-            var that = soapBase(my);
+            var that = net.http.request(opts);
 
-            var soapAction = opts.action || "UNKNOWN";
-
-            my.getServiceUri = function () {
-                return "/MediaRenderer/AVTransport/Control";
-            };
-
-            (function init() {
-                my.setHttpHeader("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#" + soapAction);
-            }());
+            that.serviceUri = "/MediaRenderer/AVTransport/Control";
 
             return that;
         }
@@ -43,7 +44,7 @@ define(function (require) {
         /**
          * This SOAP request will return the current media state from a device. The type of the returned information
          * depends on the type of media that is being played. For closer inspection of the returned data see
-         * @see models.mediaInfo
+         * @see models.media.info
          *
          *   - What is currently playing
          *   - Length of current song
@@ -51,19 +52,14 @@ define(function (require) {
          *   - Track number
          *   - Meta data (url to album art etc)
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Position info SOAP request
          */
-        function positionInfo() {
-            var my = {};
-            var that = mediaBase({action: "GetPositionInfo"}, my);
+        function positionInfo(opts) {
+            var that = mediaBase(opts);
 
-            my.getBody = function () {
-                return [
-                    "<u:GetPositionInfo xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>",
-                    "<InstanceID>0</InstanceID>",
-                    "</u:GetPositionInfo>"
-                ].join("");
-            };
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo");
+            that.body = getPositionInfoXml;
 
             return that;
         }
@@ -73,15 +69,14 @@ define(function (require) {
          * This SOAP request will request a device to start playing whatever is currently paused. The action will fail
          * in case there aren't any song "currently playing" on the device.
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function play() {
-            var my = {};
-            var that = mediaBase({action: "Play"}, my);
+        function play(opts) {
+            var that = mediaBase(opts);
 
-            my.getBody = function () {
-                return "<u:Play xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>";
-            };
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Play");
+            that.body = playXml;
 
             return that;
         }
@@ -89,15 +84,14 @@ define(function (require) {
         /**
          * This SOAP request will request a device to pause the playback of whatever is currently playing.
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function pause() {
-            var my = {};
-            var that = mediaBase({action: "Pause"}, my);
+        function pause(opts) {
+            var that = mediaBase(opts);
 
-            my.getBody = function () {
-                return "<u:Pause xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Pause>";
-            };
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Pause");
+            that.body = pauseXml;
 
             return that;
         }
@@ -106,15 +100,14 @@ define(function (require) {
         /**
          * This SOAP request will request a device to skip one track forward.
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function nextTrack() {
-            var my = {};
-            var that = mediaBase({action: "Next"}, my);
+        function nextTrack(opts) {
+            var that = mediaBase(opts);
 
-            my.getBody = function () {
-                return "<u:Next xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID></u:Next>";
-            };
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Next");
+            that.body = nextTrackXml;
 
             return that;
         }
@@ -122,32 +115,26 @@ define(function (require) {
         /**
          * This SOAP request will set a media stream to start at a certain offset
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function seek() {
-            var my = {};
-            var that = mediaBase({action: "Seek"}, my);
+        function seek(opts) {
+            var that = mediaBase(opts);
 
-            var time = {
-                hours: 0,
-                minutes: 0,
-                seconds: 0
-            };
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#Seek");
+            that.body = seekXml;
 
-            that.setSeconds = function (seconds) {
-                seconds = seconds || 0;
-                time.hours = Math.floor(seconds / 3600);
-                time.minutes = Math.floor((seconds % 3600) / 60);
-                time.seconds = seconds % 60;
-                console.log(time);
-            };
-
-            my.getBody = function () {
-                var targetTime = [time.hours, time.minutes, time.seconds].join(":");
-                return ["<u:Seek xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
-                    "<Unit>REL_TIME</Unit><Target>",
-                    targetTime,
-                    "</Target></u:Seek>"].join("");
+            /**
+             * Set playback offset into the music stream in seconds.
+             *
+             * @param {number}  seekSeconds     A number between 0 and the length of the stream
+             */
+            that.setSeconds = function (seekSeconds) {
+                seekSeconds = Number(seekSeconds) || 0;
+                var hours = Math.floor(seekSeconds / 3600);
+                var minutes = Math.floor((seekSeconds % 3600) / 60);
+                var seconds = seekSeconds % 60;
+                that.body = that.body.replace(/\d+:\d+:\d+/, [hours, minutes, seconds].join(":"));
             };
 
             return that;
@@ -156,23 +143,30 @@ define(function (require) {
         /**
          * This SOAP request will set the volume on a device
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setVolume() {
-            var my = {};
-            var that = mediaBase({action: "SetVolume"}, my);
+        function setVolume(opts) {
+            var that = mediaBase(opts);
 
-            var volume;
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetVolume");
+            that.body = setVolumeXml;
 
-            that.setVolume = function (newVolume) {
-                volume = newVolume || 0;
-            };
+            /**
+             * Set level of volume on the device.
+             * @param {number}  volume  A number between 0..100
+             */
+            that.setDesiredVolume = function (volume) {
+                volume = Number(volume) || 0;
+                if (volume < 0) {
+                    volume = 0;
+                }
+                else if (volume > 100) {
+                    volume = 100;
+                }
 
-            my.getBody = function () {
-                return ["<u:SetVolume xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
-                    "<Channel>Master</Channel><DesiredVolume>",
-                    volume,
-                    "</DesiredVolume></u:SetVolume>"].join("");
+                that.body = that.body.replace(/<DesiredVolume>\s*\d+\s*<\/DesiredVolume>/,
+                        "<DesiredVolume>" + volume + "</DesiredVolume>");
             };
 
             return that;
@@ -181,23 +175,24 @@ define(function (require) {
         /**
          * This SOAP request will mute or unmute the volume on a device
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setMute() {
-            var my = {};
-            var that = mediaBase({action: "SetMute"}, my);
+        function setMute(opts) {
+            var that = mediaBase(opts);
 
-            var muteFlag;
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetMute");
+            that.body = setMuteXml;
 
-            that.setMute = function (isMuted) {
-                muteFlag = isMuted === true ? 1 : 0;
-            };
-
-            my.getBody = function () {
-                return ["<u:SetMute xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
-                    "<Channel>Master</Channel><DesiredMute>",
-                    muteFlag,
-                    "</DesiredMute></u:SetMute>"].join("");
+            /**
+             * Set mute flag on or off.
+             *
+             * @param {boolean} isMuted     True if the device should be muted
+             */
+            that.setDesiredMute = function (isMuted) {
+                var muteFlag = isMuted === true ? 1 : 0;
+                that.body = that.body.replace(/<DesiredMute>\s*\d+\s*<\/DesiredMute>/,
+                        "<DesiredMute>" + muteFlag + "</DesiredMute>");
             };
 
             return that;
@@ -206,19 +201,41 @@ define(function (require) {
         /**
          * This SOAP request will set play mode such as repeat, shuffle, etc of a device
          *
+         * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setPlayMode() {
-            var my = {};
-            var that = mediaBase({action: "SetPlayMode"}, my);
+        function setPlayMode(opts) {
+            var that = mediaBase(opts);
 
-            var playModeFlag = "";
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode");
+            that.body = setPlayModeXml;
 
-            my.getBody = function () {
-                return ["<u:SetPlayMode xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'><InstanceID>0</InstanceID>",
-                    "<NewPlayMode>",
-                    playModeFlag,
-                    "</NewPlayMode></u:SetPlayMode>"].join("");
+            /**
+             * Sets the play mode in the SOAP body
+             *
+             * @param {PlayMode}    playMode
+             * @param {RepeatMode}  repeatMode
+             */
+            that.setNewPlayMode = function (playMode, repeatMode) {
+                var playModeString;
+                if (playMode === models.state.playMode.ORDERED &&
+                    repeatMode === models.state.repeatMode.ALL) {
+                    playModeString = "REPEAT_ALL";
+                }
+                else if (playMode === models.state.playMode.SHUFFLE &&
+                    repeatMode === models.state.repeatMode.ALL) {
+                    playModeString = "SHUFFLE";
+                }
+                else if (playMode === models.state.playMode.SHUFFLE &&
+                    repeatMode === models.state.repeatMode.OFF) {
+                    playModeString = "SHUFFLE_NOREPEAT";
+                }
+                else {
+                    playModeString = "NORMAL";
+                }
+
+                that.body = that.body.replace(/<NewPlayMode>\s*\w+\s*<\/NewPlayMode>/,
+                        "<NewPlayMode>" + playModeString + "</NewPlayMode>");
             };
 
             return that;

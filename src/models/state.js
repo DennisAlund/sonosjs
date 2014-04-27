@@ -23,6 +23,14 @@ define(function (require) {
         var xml = require("utils/xml");
         var media = require("models/media");
 
+
+        /**
+         * Identifiers for state information objects.
+         *
+         * @readonly
+         * @enum {number|string}
+         * @typedef {object} StateInformationType
+         */
         var stateInformationType = {
             LAST_CHANGE: "%%E:MODEL_STATE_LAST_CHANGE%%",
             GROUP_VOLUME: "%%E:MODEL_STATE_GROUP_VOLUME%%"
@@ -33,6 +41,7 @@ define(function (require) {
          *
          * @readonly
          * @enum {number|string}
+         * @typedef {object} PlayState
          */
         var playStateType = {
             STOPPED: "%%E:STOPPED%%",
@@ -46,6 +55,7 @@ define(function (require) {
          *
          * @readonly
          * @enum {number|string}
+         * @typedef {object} PlayMode
          */
         var playModeType = {
             ORDERED: "%%E:ORDERED%%",
@@ -57,6 +67,7 @@ define(function (require) {
          *
          * @readonly
          * @enum {number|string}
+         * @typedef {object} RepeatMode
          */
         var repeatModeType = {
             OFF: "%%E:NO_REPEAT%%",
