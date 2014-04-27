@@ -24,10 +24,10 @@ define(function (require) {
         var event = require("utils/event");
         var net = require("net");
         var ssdp = require("ssdp");
-        var soap = require("soap");
         var models = require("models");
         var upnpService = require("upnpService");
         var deviceService = require("deviceService");
+        var mediaController = require("mediaController");
 
         // Refresh the device list after maximum five minutes
         var deviceMaxLifetime = 1000 * 60 * 5;
@@ -41,25 +41,32 @@ define(function (require) {
         function sonosController() {
             var that = {};
 
-            var isServiceRunning = false;
             var multicastGroupSocket = 0;
 
             // ----------------------------------------------------------------
             // ----------------------------------------------------------------
             // PUBLIC API
+            that.VERSION = env.VERSION;
+            that.event = event;
+            that.models = models;
+            that.controller = mediaController;
+
 
             /**
              * Start up the UPnP controller
              * Join the SSDP multicast group and start receiving notifications.
+             * The startup discovery can be sped up by providing a list of last known devices, stored from last run.
+             *
+             * @param {device[]}    [devices]       Last known devices
              */
-            that.start = function () {
+            that.start = function (devices) {
+                devices = devices || [];
                 if (!net.socket.isSupported()) {
                     console.error("No socket support. Can not run Sonos controller.");
                     return;
                 }
 
                 console.log("Starting the Sonos UPnP controller");
-                isServiceRunning = true;
 
                 if (multicastGroupSocket === 0) {
                     var socketOptions = {
@@ -78,6 +85,13 @@ define(function (require) {
                 // Just send out whatever we got to start with
                 event.trigger(event.action.DEVICES, deviceService.getDevices());
 
+                // Try to locate the last known devices
+                devices.forEach(function (device) {
+                    if (device.infoUrl) {
+                        requestDeviceDetails(device.infoUrl);
+                    }
+                });
+
                 // Go wild with discovery at startup!
                 discover();
                 setTimeout(discover, 3000);
@@ -90,76 +104,20 @@ define(function (require) {
              */
             that.stop = function () {
                 console.log("Stopping the Sonos UPnP controller");
-                isServiceRunning = false;
                 upnpService.stopEventServer();
 
                 net.socket.udp.close(multicastGroupSocket);
                 multicastGroupSocket = 0;
             };
 
+
             /**
-             * Get the current device data
+             * Get current list of devices.
              *
-             * @returns {object} Device data
+             * @returns {device[]}
              */
             that.getDevices = function () {
                 return deviceService.getDevices();
-            };
-
-            /**
-             * Request a specific device's details by its id or a known URL to description service.
-             *
-             * This method will trigger corresponding information event when the device responds to the request
-             *
-             * @param {string} info     A device id or an URL to the device's service
-             */
-            that.requestDeviceDetails = function (info) {
-                var location = null;
-
-                var device = deviceService.getDevice({id: info});
-                if (device !== null) {
-                    location = device.infoUrl;
-                }
-                else {
-                    location = info;
-                }
-
-                requestDeviceDetails(location);
-            };
-
-            /**
-             * Make a http request to a sonos device and ask for the current media state (i.e. what song
-             * is currently playing).
-             *
-             * This method will trigger corresponding information event when the device responds to the request
-             *
-             * @param {string} deviceId     Id of the device to inquire
-             */
-            that.requestMediaState = function (deviceId) {
-                var device = deviceService.getDevice({id: deviceId});
-                console.debug("Requesting media state for device: %s", deviceId);
-
-                if (device === null) {
-                    console.warn("No device in cache with id: %s", deviceId);
-                    return;
-                }
-
-                var soapRequest = soap.media.positionInfo();
-                net.xhr.soap.request(device.ip, device.port, soapRequest,
-                    function soapMediaInfoCallback(xml) {
-                        models.media.info.fromXml(xml, function (mediaInfo) {
-                            if (mediaInfo) {
-                                event.trigger(event.action.MEDIA_INFO, {
-                                    device: device,
-                                    data: mediaInfo
-                                });
-                            }
-                            else {
-                                console.error("Had problems to parse media info XML.", xml);
-                            }
-                        });
-                    }
-                );
             };
 
             // ----------------------------------------------------------------
@@ -295,11 +253,6 @@ define(function (require) {
             return that;
         }
 
-        return {
-            VERSION: env.VERSION,
-            event: event,
-            models: models,
-            controller: sonosController()
-        };
+        return sonosController();
     }
 );
