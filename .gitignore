@@ -1,2 +1,6 @@
 node_modules
 lib
+.idea
+test/adhoc.html
+test/adhocRunner.js
+test/adhoc/testXml.js

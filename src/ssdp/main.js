@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2014 Dennis Alund
+ *  Copyright 2013 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,21 +18,12 @@
  * ------------------------------------------------------------------------- */
 
 define(function (require) {
-    "use strict";
+        "use strict";
 
-    // Models
-    require("./models/device-tests");
-    require("./models/media-tests");
-    require("./models/state-tests");
-
-    // Net
-    require("./net/http/header-tests");
-    require("./net/http/request-tests");
-    require("./net/http/response-tests");
-
-    // UPnP
-    require("./upnp/ssdp-tests");
-
-    // Utils
-    require("./utils/xml-tests");
-});
+        return {
+            discovery: require("ssdp/discovery"),
+            subscribe: require("ssdp/subscribe"),
+            unsubscribe: require("ssdp/unsubscribe")
+        };
+    }
+);

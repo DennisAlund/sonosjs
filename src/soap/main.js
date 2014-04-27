@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +17,11 @@
  *
  * ------------------------------------------------------------------------- */
 
-define(function () {
+define(function (require) {
         "use strict";
 
-        // Convert a string to Uint8Array buffer
-        function toBuffer(str) {
-            str = str || "";
-            var codeArray = str.codes().map(function (c) {
-                return c & 0xff;
-            });
-            return new Uint8Array(codeArray).buffer;
-        }
-
-        // Convert an ArrayBuffer to string
-        function fromBuffer(buf) {
-            if (!buf) {
-                return "";
-            }
-            var chars = new Uint8Array(buf);
-            return String.fromCharCode.apply(null, chars);
-        }
-
-
         return {
-            toBuffer: toBuffer,
-            fromBuffer: fromBuffer
+            media: require("soap/media")
         };
     }
 );

@@ -2,69 +2,31 @@ module.exports = function (grunt) {
     "use strict";
 
     var buildOptions = {
-        debug: false,
-        enumCounter: 0
+        debug: false
     };
 
-    function makeBuildConfig() {
-        return {
-            options: {
-                baseUrl: "./src",
-                name: "almond",
-                optimize: buildOptions.debug ? "none" : "uglify2",
-                paths: {
-                    almond: "../lib/almond/almond",
-                    log: "./utils/log",
-                    sugar: "../lib/sugar/release/sugar.min"
-                },
-                packages: ["net", "upnp"],
-                logLevel: 0,
-                include: ["<%=meta.libMain%>"],
-                insertRequire: ["<%=meta.libMain%>"],
-                out: "<%=meta.outFile%>",
-                wrap: {
-                    start: ["(function (root, factory) {",
-                        // If the package is imported as AMD. Export it as such.
-                        "if (typeof define === \"function\" && define.amd) { define(factory); }",
-                        // Else, if included as a regular js script: attach it to the window object
-                        "else { root.<%=pkg.name%> = factory(); }",
-                        "}(this, function () {"
-                    ].join("\n"),
-                    end: "return require(\"<%=meta.libMain%>\"); }));"
-                }
-            }
-        };
-    }
-
+    var enumCounter = 0;
 
     // Project configuration.
     grunt.config.init({
         pkg: grunt.file.readJSON("package.json"),
         meta: {
-            libMain: "main", // Name of the file that exports the API
+            libMain: "sonosController", // Name of the file that exports the API
             outFile: "./dist/sonos.js"
         },
+
         jshint: {
             src: ["Gruntfile.js", ".jshintrc", "package.json", "bower.json", "src/**/*.js", "test/**/*.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
         },
-        requirejs: {
-            release: (function () {
-                buildOptions.debug = false;
-                return makeBuildConfig();
-            })(),
-            debug: (function () {
-                buildOptions.debug = true;
-                return makeBuildConfig();
-            })()
-        },
+
         qunit: {
             all: ["./test/**/*.html"],
-            unit: ["./test/unit.html"],
-            integration: ["./test/integration.html"]
+            unit: ["./test/unit.html"]
         },
+
         replace: {
             version: {
                 // Any redundant app version occurrence in config files
@@ -77,6 +39,19 @@ module.exports = function (grunt) {
                     }
                 ]
             },
+            logs: {
+                src: ["<%=meta.outFile%>"],
+                overwrite: true,
+                replacements: [
+                    {
+                        // Remove console logs... and due to regexp you're not allowed to use semi-colon in the log text
+                        from: /console.(debug|log)\([^;]*\);/gm,
+                        to: function () {
+                            return "// Console log removed";
+                        }
+                    }
+                ]
+            },
             optimizations: {
                 src: ["<%=meta.outFile%>"],
                 overwrite: true,
@@ -85,7 +60,7 @@ module.exports = function (grunt) {
                         // Replace strings that are used as enumerations into unique numbers
                         from: /"%%E:[^%]+%%"/gm, // On the form "%%E:DEBUG_FRIENDLY_NAME%%"
                         to: function () {
-                            return buildOptions.enumCounter += 1;
+                            return enumCounter += 1;
                         }
                     }
                 ]
@@ -114,14 +89,62 @@ module.exports = function (grunt) {
     });
 
     grunt.loadNpmTasks("grunt-requirejs");
-    grunt.loadNpmTasks("grunt-contrib-requirejs");
     grunt.loadNpmTasks("grunt-contrib-qunit");
     grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-text-replace");
 
     grunt.registerTask("default", ["jshint"]);
     grunt.registerTask("test", ["jshint", "qunit:all"]);
-    grunt.registerTask("build", ["jshint", "qunit:all", "requirejs:release", "replace"]);
-    grunt.registerTask("debug", ["requirejs:debug", "replace:environment"]);
-}
-;
+    grunt.registerTask("build", "Build the application", function () {
+        var args = Array.prototype.slice.call(arguments);
+        args.forEach(function (arg) {
+            buildOptions[arg] = true;
+        });
+
+        // Do not create the build configuration until build options has been set
+        grunt.config("requirejs", {
+            default: makeBuildConfig()
+        });
+
+        if (buildOptions.debug) {
+            grunt.task.run(["requirejs", "replace:environment"]);
+        }
+        else {
+            grunt.task.run(["jshint", "qunit:all", "requirejs", "replace"]);
+        }
+    });
+
+
+    function makeBuildConfig() {
+        return {
+            options: {
+                baseUrl: "./src",
+                name: "almond",
+                optimize: buildOptions.debug ? "none" : "uglify2",
+                paths: {
+                    almond: "../lib/almond/almond",
+                    sax: "../lib/sax/lib/sax",
+                    text: "../lib/requirejs-text/text"
+                },
+                shim: {
+                    sax: {exports: "sax"}
+                },
+                packages: ["models", "net", "soap", "ssdp"],
+                logLevel: 0,
+                include: ["<%=meta.libMain%>"],
+                insertRequire: ["<%=meta.libMain%>"],
+                out: "<%=meta.outFile%>",
+                wrap: {
+                    start: ["(function (root, factory) {",
+                        // If the package is imported as AMD. Export it as such.
+                        "if (typeof define === \"function\" && define.amd) { define(factory); }",
+                        // Else, if included as a regular js script: attach it to the window object
+                        "else { root.<%=pkg.name%> = factory(); }",
+                        "}(this, function () {"
+                    ].join("\n"),
+                    end: "return require(\"<%=meta.libMain%>\"); }));"
+                }
+            }
+        };
+    }
+};

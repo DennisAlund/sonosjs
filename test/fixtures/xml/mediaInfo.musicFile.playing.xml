@@ -1,0 +1,23 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+            s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <s:Body>
+        <u:GetPositionInfoResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+            <Track>3</Track>
+            <TrackDuration>0:09:04</TrackDuration>
+            <TrackMetaData>&lt;DIDL-Lite xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot;
+                xmlns:r=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot; xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot;&gt;&lt;item
+                id=&quot;-1&quot; parentID=&quot;-1&quot; restricted=&quot;true&quot;&gt;&lt;res protocolInfo=&quot;x-file-cifs:*:audio/mpeg:*&quot;
+                duration=&quot;0:09:04&quot;&gt;x-file-cifs://192.168.1.5/music/Daft%20Punk/Daft%20Punk%20-%20Random%20Access%20Memories/Daft%20Punk%20-%20Giorgio%20by%20Moroder.mp3&lt;/res&gt;&lt;r:streamContent&gt;&lt;/r:streamContent&gt;&lt;upnp:albumArtURI&gt;/getaa?u=x-file-cifs%3a%2f%2f192.168.1.5%2fmusic%2fDaft%2520Punk%2fDaft%2520Punk%2520-%2520Random%2520Access%2520Memories%2fDaft%2520Punk%2520-%2520Giorgio%2520by%2520Moroder.mp3&amp;amp;v=52&lt;/upnp:albumArtURI&gt;&lt;dc:title&gt;Giorgio
+                by Moroder&lt;/dc:title&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;&lt;dc:creator&gt;Daft
+                Punk&lt;/dc:creator&gt;&lt;upnp:album&gt;Random Access Memories&lt;/upnp:album&gt;&lt;upnp:originalTrackNumber&gt;3&lt;/upnp:originalTrackNumber&gt;&lt;r:albumArtist&gt;Daft
+                Punk&lt;/r:albumArtist&gt;&lt;/item&gt;&lt;/DIDL-Lite&gt;</TrackMetaData>
+            <TrackURI>
+                x-file-cifs://192.168.1.5/music/Daft%20Punk/Daft%20Punk%20-%20Random%20Access%20Memories/Daft%20Punk%20-%20Giorgio%20by%20Moroder.mp3
+            </TrackURI>
+            <RelTime>0:02:47</RelTime>
+            <AbsTime>NOT_IMPLEMENTED</AbsTime>
+            <RelCount>2147483647</RelCount>
+            <AbsCount>2147483647</AbsCount>
+        </u:GetPositionInfoResponse>
+    </s:Body>
+</s:Envelope>

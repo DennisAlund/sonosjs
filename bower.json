@@ -14,11 +14,12 @@
         "package.json"
     ],
     "dependencies": {
-        "sugar": "latest"
+        "sax": "https://github.com/isaacs/sax-js.git"
     },
     "devDependencies": {
         "qunit": "latest",
         "almond": "latest",
-        "requirejs": "latest"
+        "requirejs": "latest",
+        "requirejs-text": "latest"
     }
 }

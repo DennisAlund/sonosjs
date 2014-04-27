@@ -1,8 +1,8 @@
 define(function (require) {
         "use strict";
 
-        var env = require("utils/environment");
-        var upnp = require("upnp");
+        var fixtures = require("fixtures");
+        var ssdp = require("ssdp");
 
         // -------------------------------------------------------------------------------------------------------------
         // SSDP DISCOVERY
@@ -10,23 +10,9 @@ define(function (require) {
 
         QUnit.module("Unit test: upnp/ssdp/discovery");
 
-        QUnit.test("Should be able to set all attributes from header options", function () {
+        QUnit.test("Serialized discovery request should look ok", function () {
             // Arrange & Act
-            var ssdpRequest = upnp.ssdp.discoveryRequest({
-                maxWaitTime: 99,
-                targetScope: "urn:schemas-upnp-org:device:Test:12345"
-            });
-
-            // Assert
-            QUnit.ok(ssdpRequest.isValid(), "The request is valid.");
-            QUnit.strictEqual(ssdpRequest.maxWaitTime, 99, "Max wait time is correct.");
-            QUnit.strictEqual(ssdpRequest.userAgent, env.USER_AGENT, "User agent is correct.");
-            QUnit.strictEqual(ssdpRequest.targetScope, "urn:schemas-upnp-org:device:Test:12345", "Search type is correct.");
-        });
-
-        QUnit.test("Serialized request should look ok", function () {
-            // Arrange & Act
-            var ssdpRequest = upnp.ssdp.discoveryRequest({
+            var ssdpRequest = ssdp.discovery.request({
                 maxWaitTime: 99,
                 targetScope: "urn:schemas-upnp-org:device:Test:12345"
             });
@@ -41,6 +27,35 @@ define(function (require) {
             QUnit.ok(requestString.indexOf("ST: urn:schemas-upnp-org:device:Test:12345") > 0, "Search type looks good");
         });
 
+        QUnit.test("Can create SSDP discovery response object from data", function () {
+            // Arrange
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("HTTP/1.1 200 OK")
+                .withKeyValuePair("CACHE-CONTROL", "max-age = 1234")
+                .withKeyValuePair("EXT", "")
+                .withKeyValuePair("LOCATION", "http://192.168.1.63:1400/xml/device_description.xml")
+                .withKeyValuePair("SERVER", "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)")
+                .withKeyValuePair("ST", "urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("USN", "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("X-RINCON-BOOTSEQ", "123")
+                .withKeyValuePair("X-RINCON-HOUSEHOLD", "Sonos_uhyvDFlnoddbitrYZzU2oggy5")
+                .build();
+
+            // Act
+            var discoveryResponse = ssdp.discovery.response.fromData(testData);
+
+            // Assert
+            QUnit.strictEqual(discoveryResponse.id, "uuid:RINCON_00000000000000001", "Id is correct");
+            QUnit.strictEqual(discoveryResponse.keepAlive, 1234, "keepAlive is correct");
+            QUnit.strictEqual(discoveryResponse.location, "http://192.168.1.63:1400/xml/device_description.xml", "location is correct");
+            QUnit.strictEqual(discoveryResponse.userAgent, "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)", "userAgent is correct");
+            QUnit.strictEqual(discoveryResponse.targetScope, "urn:schemas-upnp-org:device:ZonePlayer:1", "targetScope is correct");
+            QUnit.strictEqual(discoveryResponse.uniqueServiceName,
+                "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1", "uniqueServiceName is correct");
+            QUnit.strictEqual(discoveryResponse.bootId, 123, "bootId is correct");
+            QUnit.strictEqual(discoveryResponse.householdToken, "Sonos_uhyvDFlnoddbitrYZzU2oggy5", "householdToken is correct");
+        });
+
 
         // -------------------------------------------------------------------------------------------------------------
         // SSDP NOTIFICATION
@@ -48,58 +63,88 @@ define(function (require) {
 
         QUnit.module("Unit test: upnp/ssdp/notification");
 
-        QUnit.test("Should set all relevant attributes from header options for UPDATE notification", function () {
-            // Arrange & Act
-            var ssdpNotification = upnp.ssdp.notification({
-                uniqueServiceName: "abc123",
-                location: "127.0.0.1",
-                bootId: 69,
-                nextBootId: 70,
-                householdToken: "homeSweetHome",
-                searchPort: 1978,
-                targetScope: "urn:schemas-upnp-org:device:Test:12345",
-                advertisement: "ssdp:update"
-            });
+        QUnit.test("Can create SSDP ALIVE notification object from data", function () {
+            // Arrange
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("NOTIFY * HTTP/1.1")
+                .withKeyValuePair("HOST", "239.255.255.250:1900")
+                .withKeyValuePair("CACHE-CONTROL", "max-age = 1234")
+                .withKeyValuePair("LOCATION", "http://192.168.1.63:1400/xml/device_description.xml")
+                .withKeyValuePair("ST", "urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("NTS", "ssdp:alive")
+                .withKeyValuePair("SERVER", "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)")
+                .withKeyValuePair("USN", "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("BOOTID.UPNP.ORG", "123")
+                .withKeyValuePair("CONFIGID.UPNP.ORG", "456")
+                .build();
+
+            // Act
+            var discoveryResponse = ssdp.discovery.notification.fromData(testData);
 
             // Assert
-            QUnit.ok(ssdpNotification.isValid(), "The notification is valid.");
-            QUnit.strictEqual(ssdpNotification.uniqueServiceName, "abc123", "Id is correct.");
-            QUnit.strictEqual(ssdpNotification.location, "127.0.0.1", "Location is correct.");
-            QUnit.strictEqual(ssdpNotification.bootId, 69, "Boot id is correct.");
-            QUnit.strictEqual(ssdpNotification.nextBootId, 70, "Next boot id is correct.");
-            QUnit.strictEqual(ssdpNotification.householdToken, "homeSweetHome", "Config id is correct.");
-            QUnit.strictEqual(ssdpNotification.searchPort, 1978, "Search port is correct.");
-            QUnit.strictEqual(ssdpNotification.targetScope, "urn:schemas-upnp-org:device:Test:12345", "Target scope type is correct.");
-            QUnit.strictEqual(ssdpNotification.advertisement, upnp.ssdp.advertisementType.update, "Advertisement is correct.");
+            QUnit.strictEqual(discoveryResponse.id, "uuid:RINCON_00000000000000001", "Id is correct");
+            QUnit.strictEqual(discoveryResponse.keepAlive, 1234, "keepAlive is correct");
+            QUnit.strictEqual(discoveryResponse.location, "http://192.168.1.63:1400/xml/device_description.xml", "location is correct");
+            QUnit.strictEqual(discoveryResponse.userAgent, "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)", "userAgent is correct");
+            QUnit.strictEqual(discoveryResponse.advertisement, ssdp.discovery.advertisement.alive, "advertisement is correct");
+            QUnit.strictEqual(discoveryResponse.targetScope, "urn:schemas-upnp-org:device:ZonePlayer:1", "targetScope is correct");
+            QUnit.strictEqual(discoveryResponse.uniqueServiceName,
+                "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1", "uniqueServiceName is correct");
+            QUnit.strictEqual(discoveryResponse.bootId, 123, "bootId is correct");
+            QUnit.strictEqual(discoveryResponse.configId, 456, "householdToken is correct");
         });
 
-        QUnit.test("Should be able to set all attributes from header options for ALIVE notification", function () {
-            // Arrange & Act
-            var ssdpNotification = upnp.ssdp.notification({
-                uniqueServiceName: "abc123",
-                location: "127.0.0.1",
-                bootId: 69,
-                householdToken: "homeSweetHome",
-                searchPort: 1978,
-                targetScope: "urn:schemas-upnp-org:device:Test:12345",
-                advertisement: "ssdp:alive",
-                keepAlive: 1234,
-                server: "My Server"
-            });
+        QUnit.test("Can create SSDP UPDATE notification object from data", function () {
+            // Arrange
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("NOTIFY * HTTP/1.1")
+                .withKeyValuePair("HOST", "239.255.255.250:1900")
+                .withKeyValuePair("CACHE-CONTROL", "max-age = 1234")
+                .withKeyValuePair("LOCATION", "http://192.168.1.63:1400/xml/device_description.xml")
+                .withKeyValuePair("ST", "urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("NTS", "ssdp:update")
+                .withKeyValuePair("SERVER", "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)")
+                .withKeyValuePair("USN", "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("BOOTID.UPNP.ORG", "123")
+                .withKeyValuePair("CONFIGID.UPNP.ORG", "456")
+                .build();
+
+            // Act
+            var discoveryResponse = ssdp.discovery.notification.fromData(testData);
 
             // Assert
-            QUnit.ok(ssdpNotification.isValid(), "The notification is valid.");
-            QUnit.strictEqual(ssdpNotification.uniqueServiceName, "abc123", "Id is correct.");
-            QUnit.strictEqual(ssdpNotification.location, "127.0.0.1", "Location is correct.");
-            QUnit.strictEqual(ssdpNotification.bootId, 69, "Boot id is correct.");
-            QUnit.strictEqual(ssdpNotification.householdToken, "homeSweetHome", "Config id is correct.");
-            QUnit.strictEqual(ssdpNotification.searchPort, 1978, "Search port is correct.");
-            QUnit.strictEqual(ssdpNotification.targetScope, "urn:schemas-upnp-org:device:Test:12345", "Target scope type is correct.");
-            QUnit.strictEqual(ssdpNotification.advertisement, upnp.ssdp.advertisementType.alive, "Advertisement is correct.");
-            QUnit.strictEqual(ssdpNotification.keepAlive, 1234, "Keep-alive is correct.");
-            QUnit.strictEqual(ssdpNotification.server, "My Server", "Server is correct.");
+            QUnit.strictEqual(discoveryResponse.id, "uuid:RINCON_00000000000000001", "Id is correct");
+            QUnit.ok(!discoveryResponse.keepAlive, "Should not contain: keepAlive");
+            QUnit.strictEqual(discoveryResponse.location, "http://192.168.1.63:1400/xml/device_description.xml", "location is correct");
+            QUnit.ok(!discoveryResponse.userAgent, "Should not contain: userAgent");
+            QUnit.strictEqual(discoveryResponse.advertisement, ssdp.discovery.advertisement.update, "advertisement is correct");
+            QUnit.strictEqual(discoveryResponse.targetScope, "urn:schemas-upnp-org:device:ZonePlayer:1", "targetScope is correct");
+            QUnit.strictEqual(discoveryResponse.uniqueServiceName,
+                "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1", "uniqueServiceName is correct");
+            QUnit.strictEqual(discoveryResponse.bootId, 123, "bootId is correct");
+            QUnit.strictEqual(discoveryResponse.configId, 456, "householdToken is correct");
         });
 
-        // TODO: Tests for parsing data
+        QUnit.test("Bad request line should return null", function () {
+            // Arrange
+            var testData = fixtures.builders.httpHeaderBuilder()
+                .withRequestLine("FALSIFY * HTTP/1.1")
+                .withKeyValuePair("HOST", "239.255.255.250:1900")
+                .withKeyValuePair("CACHE-CONTROL", "max-age = 1234")
+                .withKeyValuePair("LOCATION", "http://192.168.1.63:1400/xml/device_description.xml")
+                .withKeyValuePair("ST", "urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("NTS", "ssdp:update")
+                .withKeyValuePair("SERVER", "Linux UPnP/1.0 Sonos/24.0-69180 (ZPS5)")
+                .withKeyValuePair("USN", "uuid:RINCON_00000000000000001::urn:schemas-upnp-org:device:ZonePlayer:1")
+                .withKeyValuePair("BOOTID.UPNP.ORG", "123")
+                .withKeyValuePair("CONFIGID.UPNP.ORG", "456")
+                .build();
+
+            // Act
+            var discoveryResponse = ssdp.discovery.notification.fromData(testData);
+
+            // Assert
+            QUnit.strictEqual(discoveryResponse, null, "Object was not created");
+        });
     }
 );

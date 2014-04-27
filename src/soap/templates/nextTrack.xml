@@ -1,0 +1,8 @@
+<s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'
+            s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'>
+    <s:Body>
+        <u:Next xmlns:u='urn:schemas-upnp-org:service:AVTransport:1'>
+            <InstanceID>0</InstanceID>
+        </u:Next>
+    </s:Body>
+</s:Envelope>

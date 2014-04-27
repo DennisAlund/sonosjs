@@ -4,15 +4,16 @@ define(function () {
     return {
         baseUrl: "../src",
         paths: {
-            net: "../test/mocks/net-mock",
-            log: "./utils/log",
-            sugar: "../lib/sugar/release/sugar.min"
+            sax: "../lib/sax/lib/sax",
+            text: "../lib/requirejs-text/text"
+        },
+        shim: {
+            sax: {exports: "sax"}
         },
         packages: [
-            "upnp",
+            "models", "soap", "ssdp", "net",
             {name: "unitTests", location: "../test/unit"},
             {name: "integrationTests", location: "../test/integration"},
-            {name: "mocks", location: "../test/mocks"},
             {name: "fixtures", location: "../test/fixtures"}
         ]
     };

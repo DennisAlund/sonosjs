@@ -1,6 +1,6 @@
 /** ---------------------------------------------------------------------------
  *  SonosJS
- *  Copyright 2013 Dennis Alund
+ *  Copyright 2014 Dennis Alund
  *  http://github.com/oddbit/sonosjs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,16 +20,29 @@
 define(function (require) {
     "use strict";
 
-    var log = require("log");
-    var chrome = require("net/chrome");
+    var xhr = require("./xhr");
+    var socket = require("./socket");
+    var httpHeader = require("./http/header");
+    var httpRequest = require("./http/request");
+    var httpResponse = require("./http/response");
 
-    if (chrome.isSupported) {
-        log.info("Networking module found support for chrome sockets.");
-        return chrome;
+    function extractAddressFromUrl(url) {
+        return url.replace(/http[s]?:\/\/([^\/]+).*/g, "$1");
     }
 
-    log.warning("Networking module didn't find any suitable networking support.");
     return {
-        isSupported: false
+        socket: socket,
+        http: {
+            header: httpHeader,
+            request: httpRequest,
+            response: httpResponse
+        },
+        xhr: {
+            http: xhr.http(),
+            soap: xhr.soap()
+        },
+        utils: {
+            extractAddressFromUrl: extractAddressFromUrl
+        }
     };
 });

@@ -18,21 +18,24 @@
  * ------------------------------------------------------------------------- */
 
 define(function (require) {
-    "use strict";
+        "use strict";
 
-    // Models
-    require("./models/device-tests");
-    require("./models/media-tests");
-    require("./models/state-tests");
+        var chrome = require("net/environments/chrome");
 
-    // Net
-    require("./net/http/header-tests");
-    require("./net/http/request-tests");
-    require("./net/http/response-tests");
+        var socketModule = {
+            isSupported: function () {
+                return false;
+            }
+        };
 
-    // UPnP
-    require("./upnp/ssdp-tests");
+        if (chrome.isSupported()) {
+            console.log("Found socket support for chrome.");
+            socketModule = chrome;
+        }
+        else {
+            console.warn("Didn't find any suitable module for socket support.");
+        }
 
-    // Utils
-    require("./utils/xml-tests");
-});
+        return socketModule;
+    }
+);
