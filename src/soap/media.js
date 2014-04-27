@@ -151,17 +151,18 @@ define(function (require) {
          * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setVolume(opts) {
+        function volume(opts) {
             var that = mediaBase(opts);
 
-            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetVolume");
+            that.serviceUri = "/MediaRenderer/RenderingControl/Control";
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:RenderingControl:1#SetVolume");
             that.body = setVolumeXml;
 
             /**
              * Set level of volume on the device.
              * @param {number}  volume  A number between 0..100
              */
-            that.setDesiredVolume = function (volume) {
+            that.setVolume = function (volume) {
                 volume = Number(volume) || 0;
                 if (volume < 0) {
                     volume = 0;
@@ -183,10 +184,11 @@ define(function (require) {
          * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setMute(opts) {
+        function mute(opts) {
             var that = mediaBase(opts);
 
-            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetMute");
+            that.serviceUri = "/MediaRenderer/RenderingControl/Control";
+            that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:RenderingControl:1#SetMute");
             that.body = setMuteXml;
 
             /**
@@ -194,7 +196,7 @@ define(function (require) {
              *
              * @param {boolean} isMuted     True if the device should be muted
              */
-            that.setDesiredMute = function (isMuted) {
+            that.setMute = function (isMuted) {
                 var muteFlag = isMuted === true ? 1 : 0;
                 that.body = that.body.replace(/<DesiredMute>\s*\d+\s*<\/DesiredMute>/,
                         "<DesiredMute>" + muteFlag + "</DesiredMute>");
@@ -209,7 +211,7 @@ define(function (require) {
          * @param {object}    opts          Object initialization options (@see net.http.request)
          * @returns {object}  Play music SOAP request
          */
-        function setPlayMode(opts) {
+        function playMode(opts) {
             var that = mediaBase(opts);
 
             that.headers.setHeaderValue("SOAPACTION", "urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode");
@@ -221,7 +223,7 @@ define(function (require) {
              * @param {PlayMode}    playMode
              * @param {RepeatMode}  repeatMode
              */
-            that.setNewPlayMode = function (playMode, repeatMode) {
+            that.setPlayMode = function (playMode, repeatMode) {
                 var playModeString;
                 if (playMode === models.state.playMode.ORDERED &&
                     repeatMode === models.state.repeatMode.ALL) {
@@ -251,9 +253,9 @@ define(function (require) {
             pause: pause,
             nextTrack: nextTrack,
             seek: seek,
-            setVolume: setVolume,
-            setMute: setMute,
-            setPlayMode: setPlayMode,
+            volume: volume,
+            mute: mute,
+            playMode: playMode,
             positionInfo: positionInfo
         };
     }
