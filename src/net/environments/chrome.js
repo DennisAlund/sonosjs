@@ -608,10 +608,9 @@ define(function (require) {
          */
         function chromeNetworkingModule() {
             var that = {};
-            var isSupported = false;
 
             that.isSupported = function () {
-                return isSupported;
+                return (typeof(chrome) !== "undefined" && chrome.hasOwnProperty("sockets")) ? true : false;
             };
 
             that.tcp = null;
@@ -623,8 +622,7 @@ define(function (require) {
             // INITIALIZE THE MODULE
 
             (function init() {
-                isSupported = (chrome && chrome.sockets) ? true : false;
-                if (!isSupported) {
+                if (!that.isSupported()) {
                     console.log("Chrome networking is not supported.");
                     return;
                 }

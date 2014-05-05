@@ -13,7 +13,6 @@ define(function () {
         packages: [
             "models", "soap", "ssdp", "net",
             {name: "unitTests", location: "../test/unit"},
-            {name: "integrationTests", location: "../test/integration"},
             {name: "fixtures", location: "../test/fixtures"}
         ]
     };
