@@ -488,7 +488,7 @@ define(function (require) {
             function getRequestCallback(request) {
                 var routes = serverSocketRegistry[request.serverSocketId].routes;
                 var requestPath = removeTrailingSlash(request.headers.requestPath);
-                if (routes.hasOwnProperty(requestPath) && typeof(routes[requestPath]) === "function") {
+                if (routes.hasOwnProperty(requestPath) && typeof routes[requestPath] === "function") {
                     return routes[requestPath];
                 }
 
@@ -610,7 +610,7 @@ define(function (require) {
             var that = {};
 
             that.isSupported = function () {
-                return (typeof(chrome) !== "undefined" && chrome.hasOwnProperty("sockets")) ? true : false;
+                return (typeof chrome !== "undefined" && chrome.hasOwnProperty("sockets")) ? true : false;
             };
 
             that.tcp = null;

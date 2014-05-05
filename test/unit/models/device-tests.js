@@ -38,7 +38,7 @@ define(function (require) {
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, false, "Can not play music.");
                 QUnit.strictEqual(deviceObject.services.length, 4, "Provides four known services.");
-                QUnit.strictEqual(typeof(deviceObject.groupName), "string", "Group name is a string.");
+                QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
                 QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
                 QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");
@@ -63,7 +63,7 @@ define(function (require) {
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, true, "Can play music.");
                 QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight known services.");
-                QUnit.strictEqual(typeof(deviceObject.groupName), "string", "Group name is a string.");
+                QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
                 QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
                 QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");
@@ -91,7 +91,7 @@ define(function (require) {
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, true, "Can play music.");
                 QUnit.strictEqual(deviceObject.services.length, 8, "Provides eight known services.");
-                QUnit.strictEqual(typeof(deviceObject.groupName), "string", "Group name is a string.");
+                QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
                 QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
                 QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");

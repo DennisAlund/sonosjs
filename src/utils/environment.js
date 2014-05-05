@@ -28,7 +28,7 @@ define(function () {
          * @returns {boolean}
          */
         function isOption(flag) {
-            return flag === true || typeof(flag) === "string";
+            return flag === true || typeof flag === "string";
         }
 
         return {
