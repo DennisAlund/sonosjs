@@ -24,8 +24,7 @@
         "grunt-requirejs": "latest",
         "grunt-contrib-jshint": "~0.7",
         "grunt-contrib-qunit": "latest",
-        "grunt-text-replace": "latest",
-        "grunt-cli": "~0.1"
+        "grunt-text-replace": "latest"
     },
     "bugs": {
         "url": "https://github.com/oddbit/sonosjs/issues"
