@@ -6,7 +6,7 @@ The application currently only works in Chrome since the socket networking has o
 [chrome socket networking API](https://developer.chrome.com/apps/app_network). 
 
 ## Building and testing
-[![Build Status](https://travis-ci.org/oddbit/sonosjs.svg)](https://travis-ci.org/oddbit/sonosjs)
+[![Build Status](https://travis-ci.org/oddbit/sonosjs.svg?branch=master)](https://travis-ci.org/oddbit/sonosjs)
 
 Check the most current build state on [Travis CI](https://travis-ci.org/oddbit/sonosjs/branches) or test it yourself; 
 install the requirements and run ```npm test```. Check the [Gruntfile.js](Gruntfile.js) for more options.
