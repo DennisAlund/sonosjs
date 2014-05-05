@@ -15,8 +15,8 @@
         }
     ],
     "scripts": {
-        "build": "grunt build",
-        "test": "grunt test"
+        "build": "grunt build --verbose",
+        "test": "grunt test --verbose"
     },
     "devDependencies": {
         "requirejs": "latest",
