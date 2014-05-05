@@ -91,8 +91,8 @@ define(function (require) {
          * @param {function}    callback
          */
         function httpRequest(action, url, options, callback) {
-            callback = typeof(arguments[2]) === "function" ? arguments[2] : arguments[3];
-            options = typeof(arguments[2]) === "object" ? arguments[2] : {};
+            callback = typeof arguments[2] === "function" ? arguments[2] : arguments[3];
+            options = typeof arguments[2] === "object" ? arguments[2] : {};
 
             var requestHeaders = options.requestHeaders || [];
             var responseType = options.responseType || "text";
@@ -106,7 +106,7 @@ define(function (require) {
             xhr.responseType = responseType;
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    if (callback) {
+                    if (typeof callback === "function") {
                         console.debug("Got HTTP 200 response on request: %s", url);
                         var responseContent = xhr[getXhrResponseProperty(responseType)];
                         callback(responseContent);

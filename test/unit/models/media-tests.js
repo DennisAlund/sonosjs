@@ -37,7 +37,7 @@ define(function (require) {
                 QUnit.ok(mediaInfoObject.metaData, "The object contains meta data.");
                 QUnit.strictEqual(mediaInfoObject.metaData.type, models.media.type.MUSIC_FILE, "It is music file information.");
                 QUnit.ok(mediaInfoObject.metaData.albumArtUri, "Meta data contains album art.");
-                QUnit.strictEqual(typeof(mediaInfoObject.metaData.originalTrackNumber), "number", "Original track number is set.");
+                QUnit.strictEqual(typeof mediaInfoObject.metaData.originalTrackNumber, "number", "Original track number is set.");
                 QUnit.ok(mediaInfoObject.metaData.originalTrackNumber > 0, "Meta data contains original track number.");
                 QUnit.ok(mediaInfoObject.metaData.creator, "Meta data contains creator name.");
                 QUnit.ok(mediaInfoObject.metaData.title, "Meta data contains music title.");
@@ -62,7 +62,7 @@ define(function (require) {
                 QUnit.ok(mediaInfoObject.metaData, "The object contains meta data.");
                 QUnit.strictEqual(mediaInfoObject.metaData.type, models.media.type.MUSIC_FILE, "It is music file information.");
                 QUnit.ok(mediaInfoObject.metaData.albumArtUri, "Meta data contains album art.");
-                QUnit.strictEqual(typeof(mediaInfoObject.metaData.originalTrackNumber), "number", "Original track number is set.");
+                QUnit.strictEqual(typeof mediaInfoObject.metaData.originalTrackNumber, "number", "Original track number is set.");
                 QUnit.ok(mediaInfoObject.metaData.originalTrackNumber > 0, "Meta data contains original track number.");
                 QUnit.ok(mediaInfoObject.metaData.creator, "Meta data contains creator name.");
                 QUnit.ok(mediaInfoObject.metaData.title, "Meta data contains music title.");
