@@ -1,6 +1,6 @@
 {
-    "name": "sonos",
-    "description": "A Javascript controller lib for Sonos. See project page for requirements and support.",
+    "name": "sonosjs",
+    "description": "An UPnP controller for Sonos.",
     "version": "0.0.3",
     "homepage": "http://github.com/oddbit/sonosjs",
     "author": "Dennis Alund",
@@ -14,8 +14,9 @@
             "url": "http://github.com/oddbit/sonosjs/blob/master/LICENSE"
         }
     ],
+    "main": "dist/sonos.js",
     "scripts": {
-        "build": "grunt build --verbose",
+        "prepublish": "grunt build",
         "test": "grunt test --verbose"
     },
     "devDependencies": {
@@ -34,14 +35,9 @@
     "bugs": {
         "url": "https://github.com/oddbit/sonosjs/issues"
     },
-    "directories": {
-        "test": "test",
-        "lib": "src"
-    },
     "keywords": [
         "sonos",
         "chrome",
-        "chrome app",
-        "chrome extension"
+        "upnp"
     ]
 }

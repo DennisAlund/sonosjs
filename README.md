@@ -1,4 +1,7 @@
 # SonosJS
+[![Build Status](https://travis-ci.org/oddbit/sonosjs.svg?branch=master)](https://travis-ci.org/oddbit/sonosjs)
+[![Code Climate](https://codeclimate.com/github/oddbit/sonosjs.png)](https://codeclimate.com/github/oddbit/sonosjs)
+
 This is a Javascript controller for [Sonos](http://www.sonos.com/) systems over UPnP.
 
 ## About
@@ -6,8 +9,6 @@ The application currently only works in Chrome (v33 or higher) since the socket 
 [chrome socket networking API](https://developer.chrome.com/apps/app_network). 
 
 ## Building and testing
-[![Build Status](https://travis-ci.org/oddbit/sonosjs.svg?branch=master)](https://travis-ci.org/oddbit/sonosjs)
-
 Check the most current build state on [Travis CI](https://travis-ci.org/oddbit/sonosjs/branches) or test it yourself. 
 
 ```shell
