@@ -1,5 +1,5 @@
 {
-    "name": "SonosJS",
+    "name": "sonos",
     "description": "A Javascript controller lib for Sonos. See project page for requirements and support.",
     "version": "0.0.3",
     "homepage": "http://github.com/oddbit/sonosjs",
@@ -19,12 +19,17 @@
         "test": "grunt test --verbose"
     },
     "devDependencies": {
-        "requirejs": "latest",
-        "grunt": "~0.4",
-        "grunt-requirejs": "latest",
+        "sax": "<=1.0.x",
+        "requirejs": ">=2.1.0 <3.0.0",
+        "almond": "<=1.0.x",
+        "grunt": "<=1.0.x",
+        "grunt-cli": "<=1.0.x",
+        "grunt-requirejs": "<=1.0.x",
         "grunt-contrib-jshint": "~0.7",
-        "grunt-contrib-qunit": "latest",
-        "grunt-text-replace": "latest"
+        "grunt-contrib-qunit": "<=1.0.x",
+        "qunitjs": ">=1.0.0 <2.0.0",
+        "grunt-text-replace": "latest",
+        "amd-loader-text": "latest"
     },
     "bugs": {
         "url": "https://github.com/oddbit/sonosjs/issues"
