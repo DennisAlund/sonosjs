@@ -7,6 +7,6 @@ deploy:
   api_key:
     secure: KgZKZwgr0hw4Qb2tQ7Wn4VzVxRu7UmJkmvsjqJiUjAkN1AScoCOVW6P/1vaJ1XprQEAHBGp5vhRQc5wdbE5o6k+0AUOh6lX5VOS2BMHFB2mDrt4CQZsBRHM23Nb2QZXazIYp2Fy5DU7phhaN6JV1l/GJ5oBLBGERUHy1ihQ04Ok=
   on:
-    branch: master
+    all_branches: true
     tags: true
     repo: oddbit/sonosjs
