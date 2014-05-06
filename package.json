@@ -1,7 +1,7 @@
 {
     "name": "sonosjs",
     "description": "An UPnP controller for Sonos.",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "homepage": "http://github.com/oddbit/sonosjs",
     "author": "Dennis Alund",
     "repository": {
