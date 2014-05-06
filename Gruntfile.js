@@ -12,6 +12,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON("package.json"),
         meta: {
             libMain: "sonosController", // Name of the file that exports the API
+            license: grunt.file.read("LICENSE-BANNER"),
             outFile: "./dist/sonos.js"
         },
 
@@ -124,7 +125,8 @@ module.exports = function (grunt) {
                 insertRequire: ["<%=meta.libMain%>"],
                 out: "<%=meta.outFile%>",
                 wrap: {
-                    start: ["(function (root, factory) {",
+                    start: ["<%=meta.license%>",
+                        "(function (root, factory) {",
                         // If the package is imported as AMD. Export it as such.
                         "if (typeof define === \"function\" && define.amd) { define(factory); }",
                         // Else, if included as a regular js script: attach it to the window object
