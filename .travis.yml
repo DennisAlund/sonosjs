@@ -5,8 +5,7 @@ deploy:
   provider: npm
   email: dennis@oddbit.co.id
   api_key:
-    secure: VTQPdlH8eVvrsoWftU1WsM8c3nJw5Rdo29fgQKMg81UUWh1g2O0SGeYmInU0BZgeuO6hpvxOSo0/MMEFqg2WxM+NwAuD0c86Dgj3sGolcaTOptpI3h6q7A7bbAINFpUHVPu4IKd6jnwRwqgl3
-tH8r8eWL3RjVdzflwxLPuGyrgM=
+    secure: KgZKZwgr0hw4Qb2tQ7Wn4VzVxRu7UmJkmvsjqJiUjAkN1AScoCOVW6P/1vaJ1XprQEAHBGp5vhRQc5wdbE5o6k+0AUOh6lX5VOS2BMHFB2mDrt4CQZsBRHM23Nb2QZXazIYp2Fy5DU7phhaN6JV1l/GJ5oBLBGERUHy1ihQ04Ok=
   on:
     branch: master
     tags: true
