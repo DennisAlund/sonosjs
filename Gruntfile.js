@@ -16,7 +16,7 @@ module.exports = function (grunt) {
         },
 
         jshint: {
-            src: ["Gruntfile.js", ".jshintrc", "package.json", "bower.json", "src/**/*.js", "test/**/*.js"],
+            src: ["Gruntfile.js", ".jshintrc", "package.json", "src/**/*.js", "test/**/*.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
@@ -28,17 +28,6 @@ module.exports = function (grunt) {
         },
 
         replace: {
-            version: {
-                // Any redundant app version occurrence in config files
-                src: ["bower.json"],
-                overwrite: true,
-                replacements: [
-                    {
-                        from: /"version":\s+"\d.\d.\d"/m,
-                        to: "\"version\": \"<%=pkg.version%>\""
-                    }
-                ]
-            },
             logs: {
                 src: ["<%=meta.outFile%>"],
                 overwrite: true,
@@ -122,9 +111,9 @@ module.exports = function (grunt) {
                 name: "almond",
                 optimize: buildOptions.debug ? "none" : "uglify2",
                 paths: {
-                    almond: "../lib/almond/almond",
-                    sax: "../lib/sax/lib/sax",
-                    text: "../lib/requirejs-text/text"
+                    almond: "../node_modules/almond/almond",
+                    sax: "../node_modules/sax/lib/sax",
+                    text: "../node_modules/amd-loader-text/text"
                 },
                 shim: {
                     sax: {exports: "sax"}

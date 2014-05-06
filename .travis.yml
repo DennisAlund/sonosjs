@@ -1,6 +1,13 @@
 language: node_js
 node_js:
   - 0.10
-before_script:
-  - npm install -g bower grunt-cli
-  - bower install
+deploy:
+  provider: npm
+  email: dennis@oddbit.co.id
+  api_key:
+    secure: VTQPdlH8eVvrsoWftU1WsM8c3nJw5Rdo29fgQKMg81UUWh1g2O0SGeYmInU0BZgeuO6hpvxOSo0/MMEFqg2WxM+NwAuD0c86Dgj3sGolcaTOptpI3h6q7A7bbAINFpUHVPu4IKd6jnwRwqgl3
+tH8r8eWL3RjVdzflwxLPuGyrgM=
+  on:
+    branch: master
+    tags: true
+    repo: oddbit/sonosjs
