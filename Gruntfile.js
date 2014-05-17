@@ -1,11 +1,8 @@
 module.exports = function (grunt) {
     "use strict";
 
-    var buildOptions = {
-        debug: false
-    };
-
     var enumCounter = 0;
+    var buildOptions = {};
 
     // Project configuration.
     grunt.config.init({
@@ -78,33 +75,39 @@ module.exports = function (grunt) {
         }
     });
 
+    // Load modules
     grunt.loadNpmTasks("grunt-requirejs");
     grunt.loadNpmTasks("grunt-contrib-qunit");
     grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-text-replace");
 
-    grunt.registerTask("default", ["jshint"]);
-    grunt.registerTask("test", ["jshint", "qunit:all"]);
-    grunt.registerTask("build", "Build the application", function () {
-        var args = Array.prototype.slice.call(arguments);
-        args.forEach(function (arg) {
-            buildOptions[arg] = true;
-        });
-
-        // Do not create the build configuration until build options has been set
+    // Register tasks
+    grunt.registerTask("default", "Alias for the 'build' task.", ["build"]);
+    grunt.registerTask("test", "Run tests.", ["jshint", "qunit:all"]);
+    grunt.registerTask("build", "Build the application in release mode.", function () {
+        buildOptions = {
+            debug: false
+        };
         grunt.config("requirejs", {
             default: makeBuildConfig()
         });
+        grunt.task.run(["jshint", "qunit:all", "requirejs", "replace"]);
+    });
 
-        if (buildOptions.debug) {
-            grunt.task.run(["requirejs", "replace:environment"]);
-        }
-        else {
-            grunt.task.run(["jshint", "qunit:all", "requirejs", "replace"]);
-        }
+    grunt.registerTask("build-debug", "Build the application with debug options.", function () {
+        buildOptions = {
+            debug: true
+        };
+        grunt.config("requirejs", {
+            default: makeBuildConfig()
+        });
+        grunt.task.run(["requirejs", "replace:environment"]);
     });
 
 
+    /**
+     * Dynamically create build configuration depending on which grunt task that is issuing.
+     */
     function makeBuildConfig() {
         return {
             options: {
