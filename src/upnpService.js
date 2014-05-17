@@ -39,7 +39,7 @@ define(function (require) {
                             var subscriptionResponse = ssdp.subscribe.response.fromData(info.data);
                             if (subscriptionResponse) {
                                 device.addServiceSubscriptionId(servicePath, subscriptionResponse.subscriptionId);
-                                console.debug("Registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
+                                console.debug("Got registration id '%s' for '%s'", subscriptionResponse.subscriptionId, servicePath);
                             }
                         }
                     };
@@ -53,6 +53,7 @@ define(function (require) {
                             localPort: httpServerSocketInfo.port
                         });
 
+                        console.debug("Trying to register '%s' with '%s' (socket id: %d)", servicePath, device.id, socketInfo.socketId);
                         net.socket.tcp.send(socketInfo.socketId, subscriptionRequest.toData());
                     });
                 });
