@@ -69,7 +69,8 @@ define(function () {
                     data.push(headerEntry.key.toUpperCase() + ": " + headerEntry.value);
                 });
 
-                return data.join("\n");
+                data.push("\r\n");
+                return data.join("\r\n");
             };
 
 

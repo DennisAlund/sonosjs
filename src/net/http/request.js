@@ -61,9 +61,8 @@ define(function (require) {
             that.toData = function () {
                 that.headers.setHeaderValue("CONTENT-LENGTH", that.body.length);
                 var data = [that.headers.toData()];
-                data.push("\n");
                 data.push(that.body);
-                return data.join("\n");
+                return data.join("\r\n");
             };
 
             return that;
