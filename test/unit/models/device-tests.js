@@ -42,13 +42,20 @@ define(function (require) {
                 QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight supported services.");
                 QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
-                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0, "Provides service /MediaServer/ContentDirectory/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0, "Provides service /MediaServer/ConnectionManager/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0, "Provides service /MediaRenderer/RenderingControl/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0, "Provides service /MediaRenderer/ConnectionManager/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0, "Provides service /MediaRenderer/AVTransport/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0, "Provides service /MediaRenderer/Queue/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0, "Provides service /MediaRenderer/GroupRenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0,
+                    "Provides service /MediaServer/ContentDirectory/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0,
+                    "Provides service /MediaServer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0,
+                    "Provides service /MediaRenderer/RenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0,
+                    "Provides service /MediaRenderer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0,
+                    "Provides service /MediaRenderer/AVTransport/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0,
+                    "Provides service /MediaRenderer/Queue/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0,
+                    "Provides service /MediaRenderer/GroupRenderingControl/Event");
 
                 // And... move on
                 QUnit.start();
@@ -70,13 +77,20 @@ define(function (require) {
                 QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight supported services.");
                 QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
-                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0, "Provides service /MediaServer/ContentDirectory/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0, "Provides service /MediaServer/ConnectionManager/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0, "Provides service /MediaRenderer/RenderingControl/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0, "Provides service /MediaRenderer/ConnectionManager/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0, "Provides service /MediaRenderer/AVTransport/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0, "Provides service /MediaRenderer/Queue/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0, "Provides service /MediaRenderer/GroupRenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0,
+                    "Provides service /MediaServer/ContentDirectory/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0,
+                    "Provides service /MediaServer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0,
+                    "Provides service /MediaRenderer/RenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0,
+                    "Provides service /MediaRenderer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0,
+                    "Provides service /MediaRenderer/AVTransport/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0,
+                    "Provides service /MediaRenderer/Queue/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0,
+                    "Provides service /MediaRenderer/GroupRenderingControl/Event");
 
                 // And... move on
                 QUnit.start();
