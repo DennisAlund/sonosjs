@@ -100,7 +100,7 @@ define(function (require) {
                     id: xmlParser.query("/root/device/UDN")[0].text,
                     deviceType: xmlParser.query("/root/device/deviceType")[0].text,
                     speakerSize: xmlParser.query("/root/device/internalSpeakerSize")[0].text,
-                    services: xmlParser.query("/root/device/serviceList/service/eventSubURL").map(function (node) {
+                    services: xmlParser.query("/root/device/deviceList/device/serviceList/service/eventSubURL").map(function (node) {
                         return node.text;
                     }),
                     groupName: xmlParser.query("/root/device/roomName")[0].text

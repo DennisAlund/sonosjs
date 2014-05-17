@@ -18,13 +18,9 @@ define(function (require) {
                 // Assert
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, false, "Can not play music.");
-                QUnit.strictEqual(deviceObject.services.length, 4, "Provides four known services.");
+                QUnit.strictEqual(deviceObject.services.length, 0, "Provides four supported services.");
                 QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
-                QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/ZoneGroupTopology/Event") >= 0, "Provides service /ZoneGroupTopology/Event");
-                QUnit.ok(deviceObject.services.indexOf("/GroupManagement/Event") >= 0, "Provides service /GroupManagement/Event");
 
                 // And... move on
                 QUnit.start();
@@ -43,16 +39,16 @@ define(function (require) {
                 // Assert
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, true, "Can play music.");
-                QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight known services.");
+                QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight supported services.");
                 QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
-                QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/ZoneGroupTopology/Event") >= 0, "Provides service /ZoneGroupTopology/Event");
-                QUnit.ok(deviceObject.services.indexOf("/GroupManagement/Event") >= 0, "Provides service /GroupManagement/Event");
-                QUnit.ok(deviceObject.services.indexOf("/AlarmClock/Event") >= 0, "Provides service /AlarmClock/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MusicServices/Event") >= 0, "Provides service /MusicServices/Event");
-                QUnit.ok(deviceObject.services.indexOf("/QPlay/Event") >= 0, "Provides service /QPlay/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0, "Provides service /MediaServer/ContentDirectory/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0, "Provides service /MediaServer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0, "Provides service /MediaRenderer/RenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0, "Provides service /MediaRenderer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0, "Provides service /MediaRenderer/AVTransport/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0, "Provides service /MediaRenderer/Queue/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0, "Provides service /MediaRenderer/GroupRenderingControl/Event");
 
                 // And... move on
                 QUnit.start();
@@ -71,17 +67,16 @@ define(function (require) {
                 // Assert
                 QUnit.ok(deviceObject, "Looks good at first glance.");
                 QUnit.strictEqual(deviceObject.canPlayMusic, true, "Can play music.");
-                QUnit.strictEqual(deviceObject.services.length, 8, "Provides eight known services.");
+                QUnit.strictEqual(deviceObject.services.length, 7, "Provides eight supported services.");
                 QUnit.strictEqual(typeof deviceObject.groupName, "string", "Group name is a string.");
                 QUnit.ok(deviceObject.groupName.length > 0, "Group name is not empty string.");
-                QUnit.ok(deviceObject.services.indexOf("/DeviceProperties/Event") >= 0, "Provides service /DeviceProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/SystemProperties/Event") >= 0, "Provides service /SystemProperties/Event");
-                QUnit.ok(deviceObject.services.indexOf("/ZoneGroupTopology/Event") >= 0, "Provides service /ZoneGroupTopology/Event");
-                QUnit.ok(deviceObject.services.indexOf("/GroupManagement/Event") >= 0, "Provides service /GroupManagement/Event");
-                QUnit.ok(deviceObject.services.indexOf("/AlarmClock/Event") >= 0, "Provides service /AlarmClock/Event");
-                QUnit.ok(deviceObject.services.indexOf("/MusicServices/Event") >= 0, "Provides service /MusicServices/Event");
-                QUnit.ok(deviceObject.services.indexOf("/AudioIn/Event") >= 0, "Provides service /AudioIn/Event");
-                QUnit.ok(deviceObject.services.indexOf("/QPlay/Event") >= 0, "Provides service /QPlay/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ContentDirectory/Event") >= 0, "Provides service /MediaServer/ContentDirectory/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaServer/ConnectionManager/Event") >= 0, "Provides service /MediaServer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/RenderingControl/Event") >= 0, "Provides service /MediaRenderer/RenderingControl/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/ConnectionManager/Event") >= 0, "Provides service /MediaRenderer/ConnectionManager/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/AVTransport/Event") >= 0, "Provides service /MediaRenderer/AVTransport/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/Queue/Event") >= 0, "Provides service /MediaRenderer/Queue/Event");
+                QUnit.ok(deviceObject.services.indexOf("/MediaRenderer/GroupRenderingControl/Event") >= 0, "Provides service /MediaRenderer/GroupRenderingControl/Event");
 
                 // And... move on
                 QUnit.start();
@@ -96,11 +91,11 @@ define(function (require) {
             // Act
             models.device.fromXml(testData, function (deviceObject) {
                 var initialSubscriptionState = deviceObject.haveSubscriptions();
-                deviceObject.addServiceSubscriptionId("/ZoneGroupTopology/Event", "uuid:RINCON_00000000000000002_sub0000000001");
+                deviceObject.addServiceSubscriptionId("/MediaRenderer/RenderingControl/Event", "uuid:RINCON_00000000000000002_sub0000000001");
 
                 // Assert
                 QUnit.strictEqual(initialSubscriptionState, false, "Device does not have subscriptions initially.");
-                QUnit.strictEqual(deviceObject.getServiceSubscriptionId("/ZoneGroupTopology/Event"),
+                QUnit.strictEqual(deviceObject.getServiceSubscriptionId("/MediaRenderer/RenderingControl/Event"),
                     "uuid:RINCON_00000000000000002_sub0000000001", "Id is correct.");
                 QUnit.strictEqual(deviceObject.getServiceSubscriptionId("/ZoneGroupTherapy/Event"), "", "Unknown service returns empty string.");
 
