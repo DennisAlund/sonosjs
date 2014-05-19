@@ -152,7 +152,6 @@ define(function (require) {
             var header = net.http.header.fromData(data);
 
             if (header.action !== "NOTIFY") {
-                console.warn("Not a SSDP notification: ", data);
                 return null;
             }
 
