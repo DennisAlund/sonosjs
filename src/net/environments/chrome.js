@@ -504,10 +504,6 @@ define(function (require) {
                 var response;
                 var requestHandler = getRequestCallback(request);
                 if (requestHandler) {
-                    // Debugging ... until majority of requests has been documented
-                    console.info("------------ HEADER------------ \n", request.headers);
-                    console.info("------------ BODY ------------ \n", request.body);
-
                     try {
                         response = httpResponse.http200({
                             body: requestHandler(request)
@@ -522,6 +518,7 @@ define(function (require) {
 
                 else {
                     console.warn("HTTP server '%d' does has not registered: %s", serverSocket, request.headers.requestPath);
+                    console.debug("%s\n%s", request.headers.toData(), request.body);
                     response = httpResponse.http404();
                 }
 
